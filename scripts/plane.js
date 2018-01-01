@@ -926,16 +926,20 @@
                 function hideAllItems() {
                     pdoc.layers.forEach(function (layer) {
                         layer.children.forEach(function (item) {
-                            if (item.fillColor) {
-                                item.fillColor.alpha = 0.01;
+                            var p = item.firstChild;
+                            item.selected = false;
+                            item.lastChild.visible = false;
+
+                            if (p.fillColor) {
+                                p.fillColor.alpha = 0.01;
                             }
 
-                            if (item.strokeColor) {
-                                item.strokeColor.alpha = 0.01;
+                            if (p.strokeColor) {
+                                p.strokeColor.alpha = 0.01;
                             }
 
-                            if (item.shadowColor) {
-                                item.shadowColor.alpha = 0.01;
+                            if (p.shadowColor) {
+                                p.shadowColor.alpha = 0.01;
                             }
                         });
                     });
@@ -958,11 +962,10 @@
                         strokeColor: 'rgb(204, 62, 90)'
                     };
 
-                    hideAllItems();
-
                     if (urlData.point) {
                         circle = new paper.Path.Circle(new paper.Point(urlData.point[0], urlData.point[1]), size);
                         circle.style = style;
+                        circle.bringToFront();
                         circle.removeOnDown();
                     }
 
@@ -984,6 +987,7 @@
                         }
 
                         circle.style = style;
+                        circle.bringToFront();
 
                         fireHit(info);
                     });
@@ -1205,6 +1209,8 @@
                 function importData(unitData, houseData) {
                     unitLayer.addChildren(unitData);
                     houseLayer.addChildren(houseData);
+
+                    hideAllItems();
                 }
 
                 function init() {
@@ -1415,7 +1421,7 @@
             loadCounter += 1;
 
             ajax({
-                url: 'https://mwc.github.io/plane-designer/data/sample.json',
+                url: '../data/sample.json',
                 success: loadDataSuccess,
                 fail: function () {
                     loadDataFail();
