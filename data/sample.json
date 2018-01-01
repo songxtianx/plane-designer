@@ -14,28 +14,28 @@
         ],
         "Items": [
             {
-                "id": "8wivff2b17g",
-                "type": 0,
-                "name": "我cao",
-                "info": "[\"Group\",{\"applyMatrix\":true,\"children\":[[\"Path\",{\"applyMatrix\":true,\"segments\":[[207,158],[149,301],[304,379],[461,280],[456,166],[456,166]],\"closed\":true,\"fillColor\":[1,0.30196,0.43922,0.4],\"strokeColor\":[0.8,0.24314,0.35294,0.9],\"strokeWidth\":2,\"selectedColor\":[0.8,0.24314,0.35294,0.9]}],[\"PointText\",{\"applyMatrix\":false,\"matrix\":[1,0,0,1,305,268.5],\"content\":\"我cao\",\"fillColor\":[1,1,1],\"shadowColor\":[0,0,0],\"shadowBlur\":1,\"shadowOffset\":[1,1],\"fontFamily\":\"微软雅黑\",\"fontSize\":16,\"leading\":19.2,\"justification\":\"center\"}]]}]"
+                "Id": "8wivff2b17g",
+                "Type": 0,
+                "Name": "我cao",
+                "Info": "[\"Group\",{\"applyMatrix\":true,\"children\":[[\"Path\",{\"applyMatrix\":true,\"segments\":[[207,158],[149,301],[304,379],[461,280],[456,166],[456,166]],\"closed\":true,\"fillColor\":[1,0.30196,0.43922,0.4],\"strokeColor\":[0.8,0.24314,0.35294,0.9],\"strokeWidth\":2,\"selectedColor\":[0.8,0.24314,0.35294,0.9]}],[\"PointText\",{\"applyMatrix\":false,\"matrix\":[1,0,0,1,305,268.5],\"content\":\"我cao\",\"fillColor\":[1,1,1],\"shadowColor\":[0,0,0],\"shadowBlur\":1,\"shadowOffset\":[1,1],\"fontFamily\":\"微软雅黑\",\"fontSize\":16,\"leading\":19.2,\"justification\":\"center\"}]]}]"
             },
             {
-                "id": "6skobw94kd6",
-                "type": 0,
-                "name": "ni mei",
-                "info": "[\"Group\",{\"applyMatrix\":true,\"children\":[[\"Path\",{\"applyMatrix\":true,\"segments\":[[660,239],[570,373],[706,449],[845,351],[855,224],[855,224]],\"closed\":true,\"fillColor\":[1,0.30196,0.43922,0.4],\"strokeColor\":[0.8,0.24314,0.35294,0.9],\"strokeWidth\":2,\"selectedColor\":[0.8,0.24314,0.35294,0.9]}],[\"PointText\",{\"applyMatrix\":false,\"matrix\":[1,0,0,1,712.5,336.5],\"content\":\"ni mei\",\"fillColor\":[1,1,1],\"shadowColor\":[0,0,0],\"shadowBlur\":1,\"shadowOffset\":[1,1],\"fontFamily\":\"微软雅黑\",\"fontSize\":16,\"leading\":19.2,\"justification\":\"center\"}]]}]"
+                "Id": "6skobw94kd6",
+                "Type": 0,
+                "Name": "ni mei",
+                "Info": "[\"Group\",{\"applyMatrix\":true,\"children\":[[\"Path\",{\"applyMatrix\":true,\"segments\":[[660,239],[570,373],[706,449],[845,351],[855,224],[855,224]],\"closed\":true,\"fillColor\":[1,0.30196,0.43922,0.4],\"strokeColor\":[0.8,0.24314,0.35294,0.9],\"strokeWidth\":2,\"selectedColor\":[0.8,0.24314,0.35294,0.9]}],[\"PointText\",{\"applyMatrix\":false,\"matrix\":[1,0,0,1,712.5,336.5],\"content\":\"ni mei\",\"fillColor\":[1,1,1],\"shadowColor\":[0,0,0],\"shadowBlur\":1,\"shadowOffset\":[1,1],\"fontFamily\":\"微软雅黑\",\"fontSize\":16,\"leading\":19.2,\"justification\":\"center\"}]]}]"
             },
             {
-                "id": "2703wq8siaq",
-                "type": 1,
-                "name": "什么鬼",
-                "info": "[\"Group\",{\"applyMatrix\":true,\"children\":[[\"Path\",{\"applyMatrix\":true,\"segments\":[[308,247],[239,310],[318,380],[461,395],[463,264],[462,257]],\"closed\":true,\"fillColor\":[0,0.59608,1,0.3],\"strokeColor\":[0,0.47843,0.8,0.8],\"strokeWidth\":2,\"selectedColor\":[0,0.47843,0.8,0.8]}],[\"PointText\",{\"applyMatrix\":false,\"matrix\":[1,0,0,1,351,321],\"content\":\"什么鬼\",\"fillColor\":[1,1,1],\"shadowColor\":[0,0,0],\"shadowBlur\":1,\"shadowOffset\":[1,1],\"fontFamily\":\"微软雅黑\",\"fontSize\":16,\"leading\":19.2,\"justification\":\"center\"}]]}]"
+                "Id": "2703wq8siaq",
+                "Type": 1,
+                "Name": "什么鬼",
+                "Info": "[\"Group\",{\"applyMatrix\":true,\"children\":[[\"Path\",{\"applyMatrix\":true,\"segments\":[[308,247],[239,310],[318,380],[461,395],[463,264],[462,257]],\"closed\":true,\"fillColor\":[0,0.59608,1,0.3],\"strokeColor\":[0,0.47843,0.8,0.8],\"strokeWidth\":2,\"selectedColor\":[0,0.47843,0.8,0.8]}],[\"PointText\",{\"applyMatrix\":false,\"matrix\":[1,0,0,1,351,321],\"content\":\"什么鬼\",\"fillColor\":[1,1,1],\"shadowColor\":[0,0,0],\"shadowBlur\":1,\"shadowOffset\":[1,1],\"fontFamily\":\"微软雅黑\",\"fontSize\":16,\"leading\":19.2,\"justification\":\"center\"}]]}]"
             },
             {
-                "id": "izk69tvp9rr",
-                "type": 1,
-                "name": "什么意思",
-                "info": "[\"Group\",{\"applyMatrix\":true,\"selected\":true,\"children\":[[\"Path\",{\"applyMatrix\":true,\"selected\":true,\"segments\":[[576,275],[571,474],[739,489],[864,406],[792,279],[792,278]],\"closed\":true,\"fillColor\":[0,0.59608,1,0.3],\"strokeColor\":[0,0.47843,0.8,0.8],\"strokeWidth\":2,\"selectedColor\":[0,0.47843,0.8,0.8]}],[\"PointText\",{\"applyMatrix\":false,\"matrix\":[1,0,0,1,717.5,382],\"selected\":true,\"content\":\"什么意思\",\"fillColor\":[1,1,1],\"shadowColor\":[0,0,0],\"shadowBlur\":1,\"shadowOffset\":[1,1],\"fontFamily\":\"微软雅黑\",\"fontSize\":16,\"leading\":19.2,\"justification\":\"center\"}]]}]"
+                "Id": "izk69tvp9rr",
+                "Type": 1,
+                "Name": "什么意思",
+                "Info": "[\"Group\",{\"applyMatrix\":true,\"selected\":true,\"children\":[[\"Path\",{\"applyMatrix\":true,\"selected\":true,\"segments\":[[576,275],[571,474],[739,489],[864,406],[792,279],[792,278]],\"closed\":true,\"fillColor\":[0,0.59608,1,0.3],\"strokeColor\":[0,0.47843,0.8,0.8],\"strokeWidth\":2,\"selectedColor\":[0,0.47843,0.8,0.8]}],[\"PointText\",{\"applyMatrix\":false,\"matrix\":[1,0,0,1,717.5,382],\"selected\":true,\"content\":\"什么意思\",\"fillColor\":[1,1,1],\"shadowColor\":[0,0,0],\"shadowBlur\":1,\"shadowOffset\":[1,1],\"fontFamily\":\"微软雅黑\",\"fontSize\":16,\"leading\":19.2,\"justification\":\"center\"}]]}]"
             }
         ]
     },

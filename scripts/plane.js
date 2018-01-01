@@ -678,8 +678,8 @@
                 var target;
 
                 items.forEach(function (item) {
-                    target = float(item.type) === 0 ? unitData : houseData;
-                    target.push(new win['paper'].Group().importJSON(item.info));
+                    target = float(item.Type) === 0 ? unitData : houseData;
+                    target.push(new win['paper'].Group().importJSON(item.Info));
                 });
 
                 canvas.importData(unitData, houseData);
@@ -921,28 +921,6 @@
 
                 function currentStyle() {
                     return pdoc.activateLayer === unitLayer ? unitStyle : houseStyle;
-                }
-
-                function hideAllItems() {
-                    pdoc.layers.forEach(function (layer) {
-                        layer.children.forEach(function (item) {
-                            var p = item.firstChild;
-                            item.selected = false;
-                            item.lastChild.visible = false;
-
-                            if (p.fillColor) {
-                                p.fillColor.alpha = 0.01;
-                            }
-
-                            if (p.strokeColor) {
-                                p.strokeColor.alpha = 0.01;
-                            }
-
-                            if (p.shadowColor) {
-                                p.shadowColor.alpha = 0.01;
-                            }
-                        });
-                    });
                 }
 
                 function fireHit(info) {
@@ -1210,7 +1188,52 @@
                     unitLayer.addChildren(unitData);
                     houseLayer.addChildren(houseData);
 
-                    hideAllItems();
+
+                    var unitStyle = {
+                        strokeColor: 'rgb(204, 62, 90, 0.9)',
+                        fillColor: 'rgb(255, 77, 112, 0.4)'
+                    };
+
+                    var houseStyle = {
+                        strokeColor: 'rgb(0, 122, 204, 0.8)',
+                        fillColor: 'rgb(0, 152, 255, 0.3)'
+                    };
+
+                    var textStyle = {
+                        fillColor: 'white',
+                        shadowColor: 'black',
+                    };
+
+
+                    if (urlData.mode === DESIGN_TIME) {
+                        unitLayer.children.forEach(function (item) {
+                            var p = item.firstChild;
+                            item.lastChild.visible = true;
+
+                            if (p.fillColor) { p.fillColor.alpha = 0.4; }
+                            if (p.strokeColor) { p.strokeColor.alpha = 0.9; }
+                        });
+
+                        houseLayer.children.forEach(function (item) {
+                            var p = item.firstChild;
+                            item.lastChild.visible = true;
+
+                            if (p.fillColor) { p.fillColor.alpha = 0.3; }
+                            if (p.strokeColor) { p.strokeColor.alpha = 0.8; }
+                        });
+                    }
+                    else {
+                        pdoc.layers.forEach(function (layer) {
+                            layer.children.forEach(function (item) {
+                                var p = item.firstChild;
+                                item.selected = false;
+                                item.lastChild.visible = false;
+
+                                if (p.fillColor) { p.fillColor.alpha = 0.01; }
+                                if (p.strokeColor) { p.strokeColor.alpha = 0.01; }
+                            });
+                        });
+                    }
                 }
 
                 function init() {
