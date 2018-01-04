@@ -881,7 +881,7 @@
                 function setActivateLayer(layerId) {
                     cancelSelected();
 
-                    if (layerId === 0) {
+                    if (layerId === 1) {
                         pdoc.activateLayer = unitLayer;
                         unitLayer.activate();
                     }
@@ -1196,6 +1196,7 @@
                     unitLayer.addChildren(unitData);
                     houseLayer.addChildren(houseData);
 
+                    houseLayer.bringToFront();
 
                     var unitStyle = {
                         strokeColor: 'rgb(204, 62, 90, 0.9)',
@@ -1255,11 +1256,11 @@
 
                     pdoc.getOptions().handleSize = 8;
 
-                    unitLayer = new paper.Layer(unitStyle);
                     houseLayer = new paper.Layer(houseStyle);
+                    unitLayer = new paper.Layer(unitStyle);
 
-                    pdoc.addLayer(unitLayer);
                     pdoc.addLayer(houseLayer);
+                    pdoc.addLayer(unitLayer);
 
                     hitTool = createHitTool();
                     drawTool = createDrawTool();
@@ -1453,7 +1454,7 @@
             loadCounter += 1;
 
             ajax({
-                url: '../data/sample.json',
+                url: '../data/sample.json?a=1',
                 success: loadDataSuccess,
                 fail: function () {
                     loadDataFail();
