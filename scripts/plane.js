@@ -678,7 +678,7 @@
                 var target;
 
                 items.forEach(function (item) {
-                    target = float(item.Type) === 0 ? unitData : houseData;
+                    target = float(item.Type) === 0 ? houseData : unitData;
                     target.push(new win['paper'].Group().importJSON(item.Info));
                 });
 
@@ -944,6 +944,14 @@
                         circle = new paper.Path.Circle(new paper.Point(urlData.point[0], urlData.point[1]), size);
                         circle.style = style;
                         circle.bringToFront();
+
+                        win.scrollTo(urlData.point[0] - float(win.innerWidth) / 2, urlData.point[1] - float(win.innerHeight) / 2);
+                    }
+
+                    if (urlData.readonly) {
+                        return tool;
+                    }
+                    else {
                         circle.removeOnDown();
                     }
 
@@ -1174,7 +1182,7 @@
                         layer.children.forEach(function (item) {
                             items.push({
                                 id: randomString(),
-                                type: type,
+                                type: type === 0 ? 1 : 0,
                                 name: item.lastChild.content,
                                 info: JSON.stringify(item)
                             });
@@ -1204,7 +1212,6 @@
                         shadowColor: 'black',
                     };
 
-
                     if (urlData.mode === DESIGN_TIME) {
                         unitLayer.children.forEach(function (item) {
                             var p = item.firstChild;
@@ -1225,12 +1232,14 @@
                     else {
                         pdoc.layers.forEach(function (layer) {
                             layer.children.forEach(function (item) {
-                                var p = item.firstChild;
-                                item.selected = false;
-                                item.lastChild.visible = false;
+                                if (item.className === 'Group') {
+                                    var p = item.firstChild;
+                                    item.selected = false;
+                                    item.lastChild.visible = false;
 
-                                if (p.fillColor) { p.fillColor.alpha = 0.01; }
-                                if (p.strokeColor) { p.strokeColor.alpha = 0.01; }
+                                    if (p.fillColor) { p.fillColor.alpha = 0.01; }
+                                    if (p.strokeColor) { p.strokeColor.alpha = 0.01; }
+                                }
                             });
                         });
                     }
@@ -1444,7 +1453,7 @@
             loadCounter += 1;
 
             ajax({
-                url: 'https://mwc.github.io/plane-designer/data/sample.json',
+                url: '../data/sample.json',
                 success: loadDataSuccess,
                 fail: function () {
                     loadDataFail();
@@ -1479,6 +1488,9 @@
                     if (u.point.length === 1) {
                         u.point[1] = u.point[0];
                     }
+
+                    u.point[0] = float(u.point[0]);
+                    u.point[1] = float(u.point[1]);
                 }
                 else if (typeof u.point === 'number') {
                     u.point = [u.point, u.point];
