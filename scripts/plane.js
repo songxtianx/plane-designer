@@ -951,7 +951,7 @@
                     if (urlData.readonly) {
                         return tool;
                     }
-                    else {
+                    else if (urlData.point) {
                         circle.removeOnDown();
                     }
 
