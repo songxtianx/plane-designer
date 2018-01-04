@@ -987,6 +987,18 @@
                     }
                 }
 
+                function figureShiftPoint(start, end) {
+                    var delta = end.subtract(start);
+                    var angle = delta.angle;
+
+                    if ((angle >= 45 && angle < 135) || (angle > -135 && angle < -45)) {
+                        return new paper.Point(start.x, end.y);
+                    }
+                    else {
+                        return new paper.Point(end.x, start.y);
+                    }
+                }
+
                 function createDrawTool() {
                     var tool = new paper.Tool();
                     var path;
@@ -1071,12 +1083,18 @@
                     });
 
                     tool.on('mousemove', function (e) {
+                        var delta = new paper.Point(0, 0);
+
                         if (path && controlDraw) {
                             if (path.segments.length > 1) {
                                 path.lastSegment.remove();
                             }
 
-                            path.add(e.point);
+                            path.add(
+                                e.modifiers.shift ?
+                                    figureShiftPoint(path.lastSegment.point, e.point) :
+                                    e.point
+                            );
                         }
                         else {
                             canvasCursor(pdoc.activateLayer.hitTest(e.point, hitOptions));
@@ -1092,6 +1110,10 @@
 
                         if (path && controlDraw) {
                             if (e.event.button == 2) {
+                                if (path.segments.length > 1) {
+                                    path.lastSegment.remove();
+                                }
+
                                 path.fillColor = style.fillColor;
                                 path.closed = true;
                                 current = path;
@@ -1118,7 +1140,11 @@
                                 e.stop();
                             }
                             else {
-                                path.add(e.point);
+                                path.add(
+                                    e.modifiers.shift && path.segments.length > 1 ?
+                                        figureShiftPoint(path.lastSegment.point, e.point) :
+                                        e.point
+                                );
                             }
                         }
                     });
@@ -1454,7 +1480,7 @@
             loadCounter += 1;
 
             ajax({
-                url: '../data/sample.json?a=1',
+                url: 'https://mwc.github.io/plane-designer/data/sample.json',
                 success: loadDataSuccess,
                 fail: function () {
                     loadDataFail();
