@@ -979,7 +979,7 @@
                     };
 
                     if (urlData.point) {
-                        circle = new paper.Path.Circle(new paper.Point(urlData.point[0], urlData.point[1]), size);
+                        circle = new paper.Path.Circle(new paper.Point(urlData.point[0], urlData.point[1]).divide(scale), size);
                         circle.style = style;
                         circle.bringToFront();
 
@@ -993,13 +993,13 @@
                         circle.removeOnDown();
                     }
 
-                    tool.on('mousedown', function (e) {
+                    view.on('click', function (e) {
                         var info = { x: e.point.x, y: e.point.y };
 
-                        circle = new paper.Path.Circle(new paper.Point(e.point), size);
+                        circle = new paper.Path.Circle(new paper.Point(e.point.divide(scale)), size);
                         circle.removeOnDown();
 
-                        hit = pdoc.hitTest(e.point, hitOptions);
+                        hit = pdoc.hitTest(e.point.divide(scale), hitOptions);
 
                         if (hit) {
                             assign(info, {
@@ -1427,8 +1427,10 @@
                     return false;
                 });
 
-                doDrag();
-                doScale();
+                if (!urlData.touch) {
+                    doDrag();
+                    doScale();
+                }
 
                 if (urlData.mode === DESIGN_TIME && !urlData.readonly) {
                     textbox = TextBox();
@@ -1546,18 +1548,18 @@
         function loadData() {
             loadCounter += 1;
 
-            // if (urlData.mode === DESIGN_HITPOINT) {
-            //     loadDataSuccess(win.parent ? win.parent['planeData'] : { Types: [], Code: 0, Items: [] });
-            // }
-            // else {
-            ajax({
-                url: 'https://mwc.github.io/plane-designer/data/sample.json',
-                success: loadDataSuccess,
-                fail: function () {
-                    loadDataFail();
-                }
-            });
-            // }
+            if (urlData.mode === DESIGN_HITPOINT) {
+                loadDataSuccess(win.parent ? win.parent['planeData'] : { Types: [], Code: 0, Items: [] });
+            }
+            else {
+                ajax({
+                    url: '../data/sample.json',
+                    success: loadDataSuccess,
+                    fail: function () {
+                        loadDataFail();
+                    }
+                });
+            }
         }
 
         function saveData(data, successCallback) {
@@ -1635,7 +1637,10 @@
 
         View().onload(function (view) {
             view.canvas.onhit(function (info) {
-                win.parent && win.parent['onpos'](info);
+                console.table(info);
+                if (win.parent !== win && typeof win.parent['onpos'] === 'function') {
+                    win.parent['onpos'](info);
+                }
             });
         });
     }
