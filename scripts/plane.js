@@ -33,12 +33,20 @@
         return Array.prototype.slice.call((context || doc).querySelectorAll(selector) || []);
     }
 
-    function extend(target, src) {
+    function extend(target, src, deep) {
         var key;
+        var value;
 
         if (target instanceof Object && src instanceof Object) {
             for (key in src) {
-                target[key] = src[key];
+                value = src[key];
+
+                if (deep && value instanceof Object) {
+                    target[key] = extend(Array.isArray(value) ? [] : {}, value);
+                }
+                else {
+                    target[key] = value;
+                }
             }
         }
 
@@ -558,6 +566,7 @@
 
             var current = null;
             var contentStyle = $content['style'];
+            var scale = 1;
 
             var textbox;
             var filterbox;
@@ -672,14 +681,42 @@
                 });
             }
 
+            function doScale() {
+                var scaleStep = 0.01;
+
+                function getScale(matrix) {
+                    return float(matrix.match(/^matrix\(([^,]+),/) [1]);
+                }
+
+                function handler(e) {
+                    var cs = getComputedStyle($content);
+
+                    scale = getScale(cs.transform) + (e.wheelDelta > 0 ? scaleStep : scaleStep * (-1));
+                    scale = scale < 0.05 ? 0.05 : (scale > 50 ? 50 : scale);
+
+                    assign(contentStyle, {
+                        transform: 'scale(' + scale + ')'
+                    });
+                }
+
+                function init() {
+                    on(doc, 'mousewheel', handler);
+                }
+
+                init();
+            }
+
             function importData(items) {
                 var unitData = [];
                 var houseData = [];
                 var target;
 
                 items.forEach(function (item) {
+                    var group = new win['paper'].Group().importJSON(item.Info);
+
+                    group.data = item.Id;
                     target = float(item.Type) === 0 ? houseData : unitData;
-                    target.push(new win['paper'].Group().importJSON(item.Info));
+                    target.push(group);
                 });
 
                 canvas.importData(unitData, houseData);
@@ -711,7 +748,7 @@
             }
 
             function organizeData() {
-                var data = assign({}, dataSource);
+                var data = extend({}, dataSource, true);
 
                 data.Items = canvas.exportData();
 
@@ -720,7 +757,7 @@
 
             function executeSaveData() {
                 saveData(organizeData(), function () {
-                    // todo: 保存完成
+                    message('保存成功!');
                 });
             }
 
@@ -877,6 +914,7 @@
 
                 var drawTool;
                 var hitTool;
+                var defaultTool;
 
                 function setActivateLayer(layerId) {
                     cancelSelected();
@@ -964,12 +1002,18 @@
                         hit = pdoc.hitTest(e.point, hitOptions);
 
                         if (hit) {
-                            info.name = isText(hit.item) ? hit.item.content : hit.item.nextSibling.content;
-                            info.type = (hit.item.parent.parent === unitLayer) ? 1 : 0;
+                            assign(info, {
+                                id: hit.item.parent.data,
+                                name: isText(hit.item) ? hit.item.content : hit.item.nextSibling.content,
+                                type: (hit.item.parent.parent === unitLayer) ? 1 : 0
+                            });
                         }
                         else {
-                            info.name = '公共区域';
-                            info.type = 2;
+                            assign(info, {
+                                id: '',
+                                name: '公共区域',
+                                type: 2
+                            });
                         }
 
                         circle.style = style;
@@ -1026,7 +1070,7 @@
                         }
 
                         segment = selectItem = null;
-                        hit = pdoc.activateLayer.hitTest(e.point, hitOptions);
+                        hit = pdoc.activateLayer.hitTest(e.point.divide(scale), hitOptions);
 
                         if (e.event.button == 2) {
                             if (hit) {
@@ -1052,9 +1096,20 @@
 
                                 if (hit.type === 'segment') {
                                     segment = hit.segment;
+
+                                    if (e.event.shiftKey) {
+                                        if (segment.point.x === segment.next.point.x) {
+                                            segment.point.x = segment.previous.point.x;
+                                            segment.point.y = segment.next.point.y;
+                                        }
+                                        else {
+                                            segment.point.x = segment.next.point.x;
+                                            segment.point.y = segment.previous.point.y;
+                                        }
+                                    }
                                 }
                                 else if (hit.type === 'stroke') {
-                                    segment = hit.item.insert(hit.location.index + 1, e.point);
+                                    segment = hit.item.insert(hit.location.index + 1, e.point.divide(scale));
                                 }
                             }
                             else if (!path && !controlDraw) {
@@ -1070,21 +1125,19 @@
                         }
 
                         if (segment) {
-                            segment.point = e.point;
+                            segment.point = e.point.divide(scale);
                         }
                         else if (selectItem) {
                             if (selectItem.className !== 'PointText') {
-                                selectItem.parent.translate(e.delta);
+                                selectItem.parent.translate(e.delta.divide(scale));
                             }
                             else {
-                                selectItem.translate(e.delta);
+                                selectItem.translate(e.delta.divide(scale));
                             }
                         }
                     });
 
                     tool.on('mousemove', function (e) {
-                        var delta = new paper.Point(0, 0);
-
                         if (path && controlDraw) {
                             if (path.segments.length > 1) {
                                 path.lastSegment.remove();
@@ -1092,12 +1145,12 @@
 
                             path.add(
                                 e.modifiers.shift ?
-                                    figureShiftPoint(path.lastSegment.point, e.point) :
-                                    e.point
+                                    figureShiftPoint(path.lastSegment.point, e.point.divide(scale)) :
+                                    e.point.divide(scale)
                             );
                         }
                         else {
-                            canvasCursor(pdoc.activateLayer.hitTest(e.point, hitOptions));
+                            canvasCursor(pdoc.activateLayer.hitTest(e.point.divide(scale), hitOptions));
                         }
                     });
 
@@ -1142,8 +1195,8 @@
                             else {
                                 path.add(
                                     e.modifiers.shift && path.segments.length > 1 ?
-                                        figureShiftPoint(path.lastSegment.point, e.point) :
-                                        e.point
+                                        figureShiftPoint(path.lastSegment.point, e.point.divide(scale)) :
+                                        e.point.divide(scale)
                                 );
                             }
                         }
@@ -1244,6 +1297,10 @@
                             var p = item.firstChild;
                             item.lastChild.visible = true;
 
+                            if (urlData.readonly) {
+                                item.selected = false;
+                            }
+
                             if (p.fillColor) { p.fillColor.alpha = 0.4; }
                             if (p.strokeColor) { p.strokeColor.alpha = 0.9; }
                         });
@@ -1251,6 +1308,10 @@
                         houseLayer.children.forEach(function (item) {
                             var p = item.firstChild;
                             item.lastChild.visible = true;
+
+                            if (urlData.readonly) {
+                                item.selected = false;
+                            }
 
                             if (p.fillColor) { p.fillColor.alpha = 0.3; }
                             if (p.strokeColor) { p.strokeColor.alpha = 0.8; }
@@ -1290,9 +1351,14 @@
 
                     hitTool = createHitTool();
                     drawTool = createDrawTool();
+                    defaultTool = new paper.Tool();
 
                     if (urlData.mode === DESIGN_TIME) {
-                        drawTool.activate();
+                        if (urlData.readonly) {
+                            defaultTool.activate();
+                        } else {
+                            drawTool.activate();
+                        }
                     }
                     else if (urlData.mode === DESIGN_HITPOINT) {
                         hitTool.activate();
@@ -1302,7 +1368,7 @@
                         var hit;
                         var text;
 
-                        if (controlDraw || controlDrag || urlData.mode !== DESIGN_TIME) {
+                        if (controlDraw || controlDrag || urlData.mode !== DESIGN_TIME || urlData.readonly) {
                             return;
                         }
 
@@ -1327,7 +1393,7 @@
             }
 
             function fixedPosition() {
-                if (urlData.mode === DESIGN_TIME && !urlData.point) {
+                if (urlData.mode === DESIGN_TIME && !urlData.readonly && !urlData.point) {
                     assign($content['style'], {
                         left: '30px',
                         top: '80px'
@@ -1362,8 +1428,9 @@
                 });
 
                 doDrag();
+                doScale();
 
-                if (urlData.mode === DESIGN_TIME) {
+                if (urlData.mode === DESIGN_TIME && !urlData.readonly) {
                     textbox = TextBox();
 
                     op = topBar.operation;
@@ -1397,7 +1464,7 @@
                         canvas.setActivateLayer(float(drawArea.getAttribute('data-id')));
                     });
                 }
-                else {
+                else if (urlData.mode === DESIGN_HITPOINT) {
                     addClass($main, 'readonly');
                 }
 
@@ -1440,7 +1507,7 @@
             var viewBox;
             var height;
 
-            var text = svg.substring(0, 1000).match(/<svg(.|\r|\n)*?>/i)[0];
+            var text = svg.substring(0, 1000).match(/<svg(.|\r|\n)*?>/i) [0];
             var width = text.match(/\bwidth\=(?:\'\")(.*?)(?:\'\")/i);
 
             if (width != null && (height = text.match(/\bheight\=(?:\'\")(.*?)(?:\'\")/i)) != null) {
@@ -1448,7 +1515,7 @@
             }
             else {
                 viewBox = text.match(/\bviewBox\=(?:\'|\")(.*?)(?:\'|\")/i);
-                return px(float(viewBox != null ? viewBox[1].split(/\,|\s/i)[2] : 0));
+                return px(float(viewBox != null ? viewBox[1].split(/\,|\s/i) [2] : 0));
             }
         }
 
@@ -1479,13 +1546,18 @@
         function loadData() {
             loadCounter += 1;
 
-            ajax({
-                url: 'https://mwc.github.io/plane-designer/data/sample.json',
-                success: loadDataSuccess,
-                fail: function () {
-                    loadDataFail();
-                }
-            });
+            if (urlData.mode === DESIGN_HITPOINT) {
+                loadDataSuccess(win.parent ? win.parent['planeData'] : { Types: [], Code: 0, Items: [] });
+            }
+            else {
+                ajax({
+                    url: 'https://mwc.github.io/plane-designer/data/sample.json',
+                    success: loadDataSuccess,
+                    fail: function () {
+                        loadDataFail();
+                    }
+                });
+            }
         }
 
         function saveData(data, successCallback) {
@@ -1535,7 +1607,7 @@
             urlData = urlSearch();
             organizeUrlData(urlData);
 
-            if (urlData.mode === DESIGN_TIME) {
+            if (urlData.mode === DESIGN_TIME && !urlData.readonly) {
                 topBar = TopBar();
             }
 
@@ -1563,7 +1635,7 @@
 
         View().onload(function (view) {
             view.canvas.onhit(function (info) {
-                console.log(info);
+                win.parent && win.parent['onpos'](info);
             });
         });
     }
