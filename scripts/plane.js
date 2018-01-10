@@ -1546,18 +1546,18 @@
         function loadData() {
             loadCounter += 1;
 
-            if (urlData.mode === DESIGN_HITPOINT) {
-                loadDataSuccess(win.parent ? win.parent['planeData'] : { Types: [], Code: 0, Items: [] });
-            }
-            else {
-                ajax({
-                    url: 'https://mwc.github.io/plane-designer/data/sample.json',
-                    success: loadDataSuccess,
-                    fail: function () {
-                        loadDataFail();
-                    }
-                });
-            }
+            // if (urlData.mode === DESIGN_HITPOINT) {
+            //     loadDataSuccess(win.parent ? win.parent['planeData'] : { Types: [], Code: 0, Items: [] });
+            // }
+            // else {
+            ajax({
+                url: 'https://mwc.github.io/plane-designer/data/sample.json',
+                success: loadDataSuccess,
+                fail: function () {
+                    loadDataFail();
+                }
+            });
+            // }
         }
 
         function saveData(data, successCallback) {
