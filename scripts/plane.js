@@ -93,7 +93,7 @@
         if (el) {
             el.addEventListener(type, handler, false);
 
-            if ('ontouchstart' in doc && type in eventMap) {
+            if ('ontouchstart' in doc && (type in eventMap)) {
                 el.addEventListener(eventMap[type], handleTouchEvent(handler), false);
             }
         }
@@ -682,17 +682,17 @@
             }
 
             function doScale() {
-                var scaleStep = 0.01;
-
                 function getScale(matrix) {
                     return float(matrix.match(/^matrix\(([^,]+),/) [1]);
                 }
 
-                function handler(e) {
+                function handler(step) {
                     var cs = getComputedStyle($content);
 
-                    scale = getScale(cs.transform) + (e.wheelDelta > 0 ? scaleStep : scaleStep * (-1));
+                    scale = getScale(cs.transform) + step;
                     scale = scale < 0.05 ? 0.05 : (scale > 50 ? 50 : scale);
+
+                    canvas.adjustShapeFont();
 
                     assign(contentStyle, {
                         transform: 'scale(' + scale + ')'
@@ -700,7 +700,46 @@
                 }
 
                 function init() {
-                    on(doc, 'mousewheel', handler);
+                    var finger = null;
+
+                    on(doc, 'mousewheel', function (e) {
+                        handler(e['wheelDelta'] > 0 ? 0.01 : -0.01);
+                    });
+
+                    if (urlData.touch) {
+                        on($main, 'touchstart', function (e) {
+                            var t = e['touches'];
+
+                            if (t.length >= 2) {
+                                finger = Math.sqrt(
+                                    Math.pow(Math.abs(t[0].clientX - t[1].clientX), 2) +
+                                    Math.pow(Math.abs(t[0].clientY - t[1].clientY), 2)
+                                );
+                            }
+                            else {
+                                finger = null;
+                            }
+                        });
+
+                        on($main, 'touchmove', function (e) {
+                            var delta;
+                            var scaling;
+                            var t = e['touches'];
+
+                            if (finger !== null && t.length >= 2) {
+                                delta = Math.sqrt(
+                                    Math.pow(Math.abs(t[0].clientX - t[1].clientX), 2) +
+                                    Math.pow(Math.abs(t[0].clientY - t[1].clientY), 2)
+                                );
+
+                                handler((delta - finger) > 0 ? 0.005 : -0.005);
+                            }
+                        });
+
+                        on($main, 'touchend', function () {
+                            finger = null;
+                        });
+                    }
                 }
 
                 init();
@@ -916,6 +955,23 @@
                 var hitTool;
                 var defaultTool;
 
+                function adjustShapeFont() {
+                    pdoc.layers.forEach(function (layer) {
+                        layer.children.forEach(function (item) {
+                            if (item.className === 'Group') {
+                                var text = item.lastChild;
+
+                                if (scale < 1) {
+                                    text.style.fontSize = Math.ceil(16 / scale);
+                                }
+                                else {
+                                    text.style.fontSize = 16;
+                                }
+                            }
+                        });
+                    });
+                }
+
                 function setActivateLayer(layerId) {
                     cancelSelected();
 
@@ -969,19 +1025,28 @@
 
                 function createHitTool() {
                     var tool = new paper.Tool();
-                    var circle;
                     var hit;
                     var size = typeof urlData.size === 'number' ? urlData.size || 10 : 10;
-                    var style = {
-                        strokeWidth: 2,
-                        fillColor: 'rgb(255, 77, 112)',
-                        strokeColor: 'rgb(204, 62, 90)'
-                    };
+                    var style = { strokeWidth: 2, fillColor: '#ff4d70', strokeColor: '#cc3e5a' };
+                    var pointer = qs('#hit-point');
+                    var pointerStyle = pointer['style'];
+
+                    assign(pointerStyle, {
+                        backgroundColor: style.fillColor,
+                        borderWidth: px(style.strokeWidth),
+                        borderStyle: 'solid',
+                        borderColor: style.strokeColor,
+                        borderRadius: px(size + style.strokeWidth),
+                        width: px(size * 2 + style.strokeWidth),
+                        height: px(size * 2 + style.strokeWidth)
+                    });
 
                     if (urlData.point) {
-                        circle = new paper.Path.Circle(new paper.Point(urlData.point[0], urlData.point[1]).divide(scale), size);
-                        circle.style = style;
-                        circle.bringToFront();
+                        assign(pointerStyle, {
+                            left: px(urlData.point[0] / scale - size - 1),
+                            top: px(urlData.point[1] / scale - size - 1),
+                            display: 'block'
+                        });
 
                         win.scrollTo(urlData.point[0] - float(win.innerWidth) / 2, urlData.point[1] - float(win.innerHeight) / 2);
                     }
@@ -989,15 +1054,19 @@
                     if (urlData.readonly) {
                         return tool;
                     }
-                    else if (urlData.point) {
-                        circle.removeOnDown();
-                    }
 
                     view.on('click', function (e) {
                         var info = { x: e.point.x, y: e.point.y };
 
-                        circle = new paper.Path.Circle(new paper.Point(e.point.divide(scale)), size);
-                        circle.removeOnDown();
+                        if (controlDrag || controlDraw) {
+                            return;
+                        }
+
+                        assign(pointerStyle, {
+                            left: px(e.point.x / scale - size - 1),
+                            top: px(e.point.y / scale - size - 1),
+                            display: 'block'
+                        });
 
                         hit = pdoc.hitTest(e.point.divide(scale), hitOptions);
 
@@ -1015,9 +1084,6 @@
                                 type: 2
                             });
                         }
-
-                        circle.style = style;
-                        circle.bringToFront();
 
                         fireHit(info);
                     });
@@ -1349,7 +1415,6 @@
                     pdoc.addLayer(houseLayer);
                     pdoc.addLayer(unitLayer);
 
-                    hitTool = createHitTool();
                     drawTool = createDrawTool();
                     defaultTool = new paper.Tool();
 
@@ -1359,22 +1424,23 @@
                         } else {
                             drawTool.activate();
                         }
+
+                        pdoc.view.on('doubleclick', function (e) {
+                            var hit;
+                            var text;
+
+                            if (controlDraw || controlDrag || urlData.mode !== DESIGN_TIME || urlData.readonly) {
+                                return;
+                            }
+
+                            hit = pdoc.activateLayer.hitTest(e.point.divide(scale), hitOptions);
+                            hit && editText(hit.item);
+                        });
                     }
-                    else if (urlData.mode === DESIGN_HITPOINT) {
+                    else {
+                        hitTool = createHitTool();
                         hitTool.activate();
                     }
-
-                    pdoc.view.on('doubleclick', function (e) {
-                        var hit;
-                        var text;
-
-                        if (controlDraw || controlDrag || urlData.mode !== DESIGN_TIME || urlData.readonly) {
-                            return;
-                        }
-
-                        hit = pdoc.activateLayer.hitTest(e.point, hitOptions);
-                        hit && editText(hit.item);
-                    });
 
                     return {
                         setActivateLayer: setActivateLayer,
@@ -1385,7 +1451,8 @@
                         editText: editText,
                         onhit: onhit,
                         exportData: exportData,
-                        importData: importData
+                        importData: importData,
+                        adjustShapeFont: adjustShapeFont
                     };
                 }
 
@@ -1427,9 +1494,10 @@
                     return false;
                 });
 
+                doScale();
+
                 if (!urlData.touch) {
                     doDrag();
-                    doScale();
                 }
 
                 if (urlData.mode === DESIGN_TIME && !urlData.readonly) {
@@ -1466,7 +1534,7 @@
                         canvas.setActivateLayer(float(drawArea.getAttribute('data-id')));
                     });
                 }
-                else if (urlData.mode === DESIGN_HITPOINT) {
+                else {
                     addClass($main, 'readonly');
                 }
 
@@ -1572,7 +1640,7 @@
 
         function organizeUrlData(u) {
             if (typeof u.mode === 'number') {
-                u.mode = u.mode < 0 || u.mode > 1 ? 0 : u.mode;
+                u.mode = u.mode < 0 || u.mode > 2 ? 0 : u.mode;
             }
             else {
                 u.mode = DESIGN_TIME;
@@ -1637,7 +1705,6 @@
 
         View().onload(function (view) {
             view.canvas.onhit(function (info) {
-                console.table(info);
                 if (win.parent !== win && typeof win.parent['onpos'] === 'function') {
                     win.parent['onpos'](info);
                 }
