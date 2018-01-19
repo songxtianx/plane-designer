@@ -14,28 +14,40 @@
         ],
         "Items": [
             {
-                "Id": "8wivff2b17g",
-                "Type": 0,
-                "Name": "01户型",
-                "Info": "[\"Group\",{\"applyMatrix\":true,\"children\":[[\"Path\",{\"applyMatrix\":true,\"segments\":[[207,158],[149,301],[304,379],[461,280],[456,166],[456,166]],\"closed\":true,\"fillColor\":[1,0.30196,0.43922,0.4],\"strokeColor\":[0.8,0.24314,0.35294,0.9],\"strokeWidth\":2,\"selectedColor\":[0.8,0.24314,0.35294,0.9]}],[\"PointText\",{\"applyMatrix\":false,\"matrix\":[1,0,0,1,305,268.5],\"content\":\"01户型\",\"fillColor\":[1,1,1],\"shadowColor\":[0,0,0],\"shadowBlur\":1,\"shadowOffset\":[1,1],\"fontFamily\":\"微软雅黑\",\"fontSize\":16,\"leading\":19.2,\"justification\":\"center\"}]]}]"
-            },
-            {
-                "Id": "6skobw94kd6",
-                "Type": 0,
-                "Name": "02户型",
-                "Info": "[\"Group\",{\"applyMatrix\":true,\"children\":[[\"Path\",{\"applyMatrix\":true,\"segments\":[[660,239],[570,373],[706,449],[845,351],[855,224],[855,224]],\"closed\":true,\"fillColor\":[1,0.30196,0.43922,0.4],\"strokeColor\":[0.8,0.24314,0.35294,0.9],\"strokeWidth\":2,\"selectedColor\":[0.8,0.24314,0.35294,0.9]}],[\"PointText\",{\"applyMatrix\":false,\"matrix\":[1,0,0,1,712.5,336.5],\"content\":\"02户型\",\"fillColor\":[1,1,1],\"shadowColor\":[0,0,0],\"shadowBlur\":1,\"shadowOffset\":[1,1],\"fontFamily\":\"微软雅黑\",\"fontSize\":16,\"leading\":19.2,\"justification\":\"center\"}]]}]"
-            },
-            {
-                "Id": "2703wq8siaq",
+                "Id": "i6bd9rs9r8n",
                 "Type": 1,
                 "Name": "单元A",
-                "Info": "[\"Group\",{\"applyMatrix\":true,\"children\":[[\"Path\",{\"applyMatrix\":true,\"segments\":[[308,247],[239,310],[318,380],[461,395],[463,264],[462,257]],\"closed\":true,\"fillColor\":[0,0.59608,1,0.3],\"strokeColor\":[0,0.47843,0.8,0.8],\"strokeWidth\":2,\"selectedColor\":[0,0.47843,0.8,0.8]}],[\"PointText\",{\"applyMatrix\":false,\"matrix\":[1,0,0,1,351,321],\"content\":\"单元A\",\"fillColor\":[1,1,1],\"shadowColor\":[0,0,0],\"shadowBlur\":1,\"shadowOffset\":[1,1],\"fontFamily\":\"微软雅黑\",\"fontSize\":16,\"leading\":19.2,\"justification\":\"center\"}]]}]"
+                "Info": "[\"Group\",{\"applyMatrix\":true,\"children\":[[\"Path\",{\"applyMatrix\":true,\"segments\":[[128,291],[128,201],[231,201],[231,232],[263,232],[263,201],[325,201],[325,187],[369,187],[369,242],[405,242],[405,146],[474,146],[474,174],[527,174],[527,224],[645,224],[645,259],[524,259],[524,344],[585,344],[585,522],[399,522],[399,417],[352,417],[352,440],[104,440],[104,407],[115,407],[115,291]],\"closed\":true,\"fillColor\":[1,0.30196,0.43922,0.4],\"strokeColor\":[0.8,0.24314,0.35294,0.9],\"strokeWidth\":2,\"selectedColor\":[0.8,0.24314,0.35294,0.9]}],[\"PointText\",{\"applyMatrix\":false,\"matrix\":[1,0,0,1,466.5,279],\"content\":\"单元A\",\"fillColor\":[1,1,1],\"shadowColor\":[0,0,0],\"shadowBlur\":1,\"shadowOffset\":[1,1],\"fontFamily\":\"微软雅黑\",\"fontSize\":16,\"leading\":19.2,\"justification\":\"center\"}]]}]"
             },
             {
-                "Id": "izk69tvp9rr",
+                "Id": "alnsz22w4qj",
                 "Type": 1,
                 "Name": "单元B",
-                "Info": "[\"Group\",{\"applyMatrix\":true,\"selected\":true,\"children\":[[\"Path\",{\"applyMatrix\":true,\"selected\":true,\"segments\":[[576,275],[571,474],[739,489],[864,406],[792,279],[792,278]],\"closed\":true,\"fillColor\":[0,0.59608,1,0.3],\"strokeColor\":[0,0.47843,0.8,0.8],\"strokeWidth\":2,\"selectedColor\":[0,0.47843,0.8,0.8]}],[\"PointText\",{\"applyMatrix\":false,\"matrix\":[1,0,0,1,717.5,382],\"selected\":true,\"content\":\"单元B\",\"fillColor\":[1,1,1],\"shadowColor\":[0,0,0],\"shadowBlur\":1,\"shadowOffset\":[1,1],\"fontFamily\":\"微软雅黑\",\"fontSize\":16,\"leading\":19.2,\"justification\":\"center\"}]]}]"
+                "Info": "[\"Group\",{\"applyMatrix\":true,\"selected\":true,\"children\":[[\"Path\",{\"applyMatrix\":true,\"selected\":true,\"segments\":[[648,171],[702,171],[702,148],[767,148],[767,255],[798,255],[798,176],[1083,176],[1083,350],[1060,350],[1060,415],[1072,415],[1072,443],[817,443],[817,417],[774,417],[774,521],[591,521],[591,345],[646,345]],\"closed\":true,\"fillColor\":[1,0.30196,0.43922,0.4],\"strokeColor\":[0.8,0.24314,0.35294,0.9],\"strokeWidth\":2,\"selectedColor\":[0.8,0.24314,0.35294,0.9]}],[\"PointText\",{\"applyMatrix\":false,\"matrix\":[1,0,0,1,689,266.5],\"content\":\"单元B\",\"fillColor\":[1,1,1],\"shadowColor\":[0,0,0],\"shadowBlur\":1,\"shadowOffset\":[1,1],\"fontFamily\":\"微软雅黑\",\"fontSize\":16,\"leading\":19.2,\"justification\":\"center\"}]]}]"
+            },
+            {
+                "Id": "8wuz3v42you",
+                "Type": 0,
+                "Name": "01户型",
+                "Info": "[\"Group\",{\"applyMatrix\":true,\"children\":[[\"Path\",{\"applyMatrix\":true,\"segments\":[[130,202],[232,202],[232,233],[262,233],[262,201],[324,201],[324,187],[369,187],[369,241],[407,241],[407,330],[353,330],[353,442],[104,442],[104,407],[117,407],[117,291],[127,291]],\"closed\":true,\"fillColor\":[0,0.59608,1,0.3],\"strokeColor\":[0,0.47843,0.8,0.8],\"strokeWidth\":2,\"selectedColor\":[0,0.47843,0.8,0.8]}],[\"PointText\",{\"applyMatrix\":false,\"matrix\":[1,0,0,1,255.5,314.5],\"content\":\"01户型\",\"fillColor\":[1,1,1],\"shadowColor\":[0,0,0],\"shadowBlur\":1,\"shadowOffset\":[1,1],\"fontFamily\":\"微软雅黑\",\"fontSize\":16,\"leading\":19.2,\"justification\":\"center\"}]]}]"
+            },
+            {
+                "Id": "r8xgsq3myoh",
+                "Type": 0,
+                "Name": "02户型",
+                "Info": "[\"Group\",{\"applyMatrix\":true,\"children\":[[\"Path\",{\"applyMatrix\":true,\"segments\":[[400,523],[585,523],[585,346],[525,346],[525,312],[409,312],[409,332],[355,332],[355,417],[397,417]],\"closed\":true,\"fillColor\":[0,0.59608,1,0.3],\"strokeColor\":[0,0.47843,0.8,0.8],\"strokeWidth\":2,\"selectedColor\":[0,0.47843,0.8,0.8]}],[\"PointText\",{\"applyMatrix\":false,\"matrix\":[1,0,0,1,470,417.5],\"content\":\"02户型\",\"fillColor\":[1,1,1],\"shadowColor\":[0,0,0],\"shadowBlur\":1,\"shadowOffset\":[1,1],\"fontFamily\":\"微软雅黑\",\"fontSize\":16,\"leading\":19.2,\"justification\":\"center\"}]]}]"
+            },
+            {
+                "Id": "jut493dfe3i",
+                "Type": 0,
+                "Name": "08户型",
+                "Info": "[\"Group\",{\"applyMatrix\":true,\"children\":[[\"Path\",{\"applyMatrix\":true,\"segments\":[[766,255],[799,255],[799,177],[1081,177],[1081,348],[1059,348],[1059,414],[1072,414],[1072,441],[819,441],[819,329],[764,329]],\"closed\":true,\"fillColor\":[0,0.59608,1,0.3],\"strokeColor\":[0,0.47843,0.8,0.8],\"strokeWidth\":2,\"selectedColor\":[0,0.47843,0.8,0.8]}],[\"PointText\",{\"applyMatrix\":false,\"matrix\":[1,0,0,1,922.5,309],\"content\":\"08户型\",\"fillColor\":[1,1,1],\"shadowColor\":[0,0,0],\"shadowBlur\":1,\"shadowOffset\":[1,1],\"fontFamily\":\"微软雅黑\",\"fontSize\":16,\"leading\":19.2,\"justification\":\"center\"}]]}]"
+            },
+            {
+                "Id": "5sbq8nttu5r",
+                "Type": 0,
+                "Name": "03户型",
+                "Info": "[\"Group\",{\"applyMatrix\":true,\"children\":[[\"Path\",{\"applyMatrix\":true,\"segments\":[[648,310],[762,310],[762,331],[816,331],[816,419],[775,419],[775,519],[591,519],[591,343],[647,343]],\"closed\":true,\"fillColor\":[0,0.59608,1,0.3],\"strokeColor\":[0,0.47843,0.8,0.8],\"strokeWidth\":2,\"selectedColor\":[0,0.47843,0.8,0.8]}],[\"PointText\",{\"applyMatrix\":false,\"matrix\":[1,0,0,1,703.5,414.5],\"content\":\"03户型\",\"fillColor\":[1,1,1],\"shadowColor\":[0,0,0],\"shadowBlur\":1,\"shadowOffset\":[1,1],\"fontFamily\":\"微软雅黑\",\"fontSize\":16,\"leading\":19.2,\"justification\":\"center\"}]]}]"
             }
         ]
     },

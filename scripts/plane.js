@@ -102,7 +102,7 @@
     /**
      * 手工触发指定事件
      * 
-     * @param {Node} el      触发事件的元素
+     * @param {Node|Element} el      触发事件的元素
      * @param {string}  type     指定事件类型，无需前缀 on
      */
     function trigger(el, type) {
@@ -117,7 +117,7 @@
     /**
      * 从指定元素中移除一个类
      * 
-     * @param {Element}  el          移除类的元素
+     * @param {EventTarget}  el          移除类的元素
      * @param {string}   name        待移除的类名，仅限一个，同时移除多个类需多次调用本函数
      * @param {function} [callback]  执行移除样式类后执行的回调
      */
@@ -165,7 +165,7 @@
     /**
      * 向指定元素添加类
      * 
-     * @param {Element} el  添加类的元素
+     * @param {Element|EventTarget} el  添加类的元素
      * @param {string}  name 指定添加的类名，仅限一个，同时添加多个类需多次调用本函数
      */
     function addClass(el, name) {
@@ -390,8 +390,14 @@
         var KEY_CODE_SPACE = 32;
         var KEY_CODE_RETURN = 13;
         var KEY_CODE_CTRL = 17;
+        var KEY_CODE_IE_CTRL_Z = 26;
+        var KEY_CODE_IE_CTRL_Y = 25;
+        var KEY_CODE_CTRL_Z = 90;
+        var KEY_CODE_CTRL_Y = 89;
+
         var DESIGN_TIME = 0;
         var DESIGN_HITPOINT = 1;
+
         var FILTER_HOUSE = 0;
         var FILTER_UNIT = 1;
         var FILTER_NONE = 2;
@@ -407,6 +413,118 @@
 
         var dataSource;
         var urlData;
+
+        function Revocable() {
+            var current;
+            var head;
+            var max = 100;
+            var undoCallbacks = [];
+            var redoCallbacks = [];
+
+            function createStack(data) {
+                current = {
+                    parent: null,
+                    next: null,
+                    data: data
+                };
+
+                head = current;
+            }
+
+            function isHead() {
+                return head === current;
+            }
+
+            function push(data) {
+                if (typeof current === 'undefined') {
+                    createStack(data);
+                }
+                else {
+                    current.next = {
+                        parent: current,
+                        next: null,
+                        data: data
+                    };
+
+                    current = current.next;
+                }
+            }
+
+            function stackLength() {
+                var start = head;
+                var length = 1;
+
+                if (!start) {
+                    return 0;
+                }
+
+                while (start = start.next && length++);
+
+                return length;
+            }
+
+            function checkOverflow() {
+                if (stackLength() > max) {
+                    head = head.next;
+                    head.parent = null;
+                }
+            }
+
+            function whole(callbacks) { callbacks.forEach(function (f) { f(current); }); }
+
+            function appendCallback(dest, handler) {
+                if (typeof handler === 'function') {
+                    dest.push(handler);
+                }
+            }
+
+            function getCurrentData() { return current && current.data; }
+
+            function onredo(handler) { appendCallback(redoCallbacks, handler); };
+
+            function onundo(handler) { appendCallback(undoCallbacks, handler); }
+
+            function onaction(handler) {
+                onredo(handler);
+                onundo(handler);
+            }
+
+            function stack(data) {
+                push(data);
+                checkOverflow();
+
+                return current;
+            }
+
+            function undo() {
+                if (current && current.parent) {
+                    current = current.parent;
+                    whole(undoCallbacks);
+                }
+            }
+
+            function redo() {
+                if (current && current.next) {
+                    current = current.next;
+                    whole(redoCallbacks);
+                }
+            }
+
+            function init() {
+                return {
+                    onundo: onundo,
+                    onredo: onredo,
+                    onaction: onaction,
+                    undo: undo,
+                    redo: redo,
+                    stack: stack,
+                    isHead: isHead,
+                    getCurrentData: getCurrentData
+                };
+            }
+
+            return init();
+        }
 
         function TopBar() {
             var $topbar = qs('.top-bar');
@@ -442,6 +560,10 @@
                     return selectItem;
                 }
 
+                function getSelectIndex() {
+                    return float(selectItem.getAttribute('data-id'));
+                }
+
                 function init() {
                     qsa('li', $unitbar).forEach(function (item) {
                         on(item, 'click', function (e) {
@@ -462,6 +584,7 @@
                     return {
                         onchange: onchange,
                         getSelectItem: getSelectItem,
+                        getSelectIndex: getSelectIndex,
                         select: select
                     };
                 }
@@ -471,7 +594,9 @@
 
             function Operation() {
                 var $operation = qs('.operation', $topbar);
-                var ops = ['move', 'delete', 'edit', 'filter', 'save'];
+                var $contextMenuBox = qs('.context-menu-box');
+
+                var ops = ['move', 'delete', 'edit', 'save', 'rotate', 'redo', 'undo', 'copy'];
                 var api = {};
                 var callbacks = {};
 
@@ -481,24 +606,56 @@
                     });
                 }
 
+                function clearContextMenuSelected() {
+                    qsa('.op-btn.selected-menu', $operation).forEach(function (el) {
+                        removeClass(el, 'selected-menu');
+                    });
+                }
+
                 function bindEvent(el, name) {
-                    return function () {
-                        callbacks[name].forEach(function (callback) {
-                            if (hasClass(el, '.toggle')) {
-                                if (hasClass(el, '.selected')) {
-                                    removeClass(el, 'selected');
-                                    callback(false);
+                    return function (e) {
+                        var target = e.target;
+                        var more;
+
+                        if (hasClass(target, '.more')) {
+                            more = qs(target.getAttribute('data-context-menu'), $contextMenuBox);
+                        }
+                        else if (hasClass(target.parentElement, '.more')) {
+                            more = qs(target.parentElement.getAttribute('data-context-menu'), $contextMenuBox);
+                        }
+
+                        if (more) {
+                            e.stopPropagation();
+
+                            addClass(el, 'selected-menu');
+                            removeClass(more, 'collapse');
+                            addClass(more, 'expando');
+
+                            assign(more['style'], {
+                                right: px(float(more.getAttribute('data-right') || 10)),
+                                width: px(float(more.getAttribute('data-width') || 100))
+                            });
+
+                            more['focus']();
+                        }
+                        else {
+                            callbacks[name].forEach(function (callback) {
+                                if (hasClass(el, '.toggle')) {
+                                    if (hasClass(el, '.selected')) {
+                                        removeClass(el, 'selected');
+                                        callback(false);
+                                    }
+                                    else {
+                                        clearSelection();
+                                        addClass(el, 'selected');
+                                        callback(true);
+                                    }
                                 }
                                 else {
-                                    clearSelection();
-                                    addClass(el, 'selected');
-                                    callback(true);
+                                    callback();
                                 }
-                            }
-                            else {
-                                callback();
-                            }
-                        });
+                            });
+                        }
                     };
                 }
 
@@ -522,13 +679,46 @@
                     $operation['style'].display = 'flex';
                 }
 
+                function hideMenus() {
+                    trigger($contextMenuBox, 'focusout');
+                }
+
                 function init() {
+                    on($contextMenuBox, 'focusout', function (e) {
+                        var target = e.target;
+
+                        clearContextMenuSelected();
+
+                        if (hasClass(target, '.context-menu-item')) {
+                            removeClass(target, 'expando');
+                            addClass(target, 'collapse');
+                        }
+                        else {
+                            [].slice.call($contextMenuBox.children).forEach(function (menu) {
+                                trigger(menu, 'focusout');
+                            });
+                        }
+                    });
+
+                    on($contextMenuBox, 'click', function (e) {
+                        var target = e.target;
+                        var parent = target['parentElement'];
+
+                        if (hasClass(target, 'li') && !hasClass(target, '.menu-line') && hasClass(parent, '.context-menu-item')) {
+                            trigger(parent, 'focusout');
+                        }
+                        else if (hasClass(parent, 'li') && hasClass(parent.parentElement, '.context-menu-item')) {
+                            trigger(parent.parentElement, 'focusout');
+                        }
+                    });
+
                     ops.forEach(binding);
 
-                    api.clearSelection = clearSelection;
-                    api.show = show;
-
-                    return api;
+                    return assign(api, {
+                        clearSelection: clearSelection,
+                        hideMenus: hideMenus,
+                        show: show
+                    });
                 }
 
                 return init();
@@ -545,6 +735,7 @@
                     onchange: unitbar.onchange,
                     getSelectScheme: unitbar.getSelectScheme,
                     getSelectItem: unitbar.getSelectItem,
+                    getSelectIndex: unitbar.getSelectIndex,
                     operation: operation
                 };
             }
@@ -563,14 +754,16 @@
 
             var controlDrag = false;
             var controlDraw = false;
+            var controlCopy = false;
+            var controlRotate = false;
 
             var current = null;
             var contentStyle = $content['style'];
             var scale = 1;
 
             var textbox;
-            var filterbox;
             var canvas;
+            var stacker;
 
             function cursor(icon) {
                 $main['style'].cursor = (typeof icon === 'string') ?
@@ -581,6 +774,7 @@
             function moveShape(shape, delta) {
                 if (shape) {
                     shape.parent.position = shape.parent.position.add(delta);
+                    stack();
                 }
             }
 
@@ -596,7 +790,28 @@
                     }
 
                     shape.parent.remove();
+                    stack();
                 }
+            }
+
+            function copyShape(shape) {
+                var parent = shape;
+
+                if (shape !== null) {
+                    if (shape.className !== 'Group' && shape.parent !== null && shape.parent.className === 'Group') {
+                        parent = shape.parent;
+                    }
+
+                    parent = parent.clone();
+                    shape.selected = false;
+                    parent.lastChild.content = canvas.defaultName();
+
+                    parent.bringToFront();
+
+                    return current = parent.firstChild;
+                }
+
+                return shape;
             }
 
             function selectShape(shape) {
@@ -692,7 +907,9 @@
                     scale = getScale(cs.transform) + step;
                     scale = scale < 0.05 ? 0.05 : (scale > 50 ? 50 : scale);
 
-                    canvas.adjustShapeFont();
+                    if (urlData.mode === DESIGN_TIME) {
+                        canvas.adjustShapeFont();
+                    }
 
                     assign(contentStyle, {
                         transform: 'scale(' + scale + ')'
@@ -742,7 +959,46 @@
                     }
                 }
 
-                init();
+                return init();
+            }
+
+            function doRotate() {
+                function rotate(deg, center) {
+                    if (current) {
+                        current.parent.firstChild.rotate(deg, center);
+                        stack();
+                    }
+                }
+
+                function init() {
+                    on(qs('.rotate-90'), 'click', function () {
+                        rotate(90);
+                    });
+
+                    on(qs('.rotate-counter-90'), 'click', function () {
+                        rotate(-90);
+                    });
+
+                    on(qs('.rotate-hor'), 'click', function () {
+                        if (current) {
+                            current.parent.firstChild.scale(-1, 1);
+                            stack();
+                        }
+                    });
+
+                    on(qs('.rotate-ver'), 'click', function () {
+                        if (current) {
+                            current.parent.firstChild.scale(1, -1);
+                            stack();
+                        }
+                    });
+                }
+
+                return init();
+            }
+
+            function stack() {
+                stacker.stack(canvas.exportJSON());
             }
 
             function importData(items) {
@@ -759,6 +1015,7 @@
                 });
 
                 canvas.importData(unitData, houseData);
+                stack();
             }
 
             function loadImage() {
@@ -875,7 +1132,13 @@
 
                             $textbox['value'] = '';
                             hide();
+                            stack();
                         }
+                    });
+
+
+                    on($textbox, 'keydown', function (e) {
+                        e.stopPropagation();
                     });
 
                     on($textbox, 'keyup', function (e) {
@@ -891,8 +1154,10 @@
                     });
 
                     on($textbox, 'input', function (e) {
-                        currentText.content = $textbox['value'];
-                        changeBounds();
+                        if (currentText) {
+                            currentText.content = $textbox['value'];
+                            changeBounds();
+                        }
                     });
 
                     on($textbox, 'mousedown', ignore);
@@ -955,6 +1220,10 @@
                 var hitTool;
                 var defaultTool;
 
+                function defaultName() {
+                    return '未命名' + (pdoc.activateLayer === unitLayer ? '单元' : '户型');
+                }
+
                 function adjustShapeFont() {
                     pdoc.layers.forEach(function (layer) {
                         layer.children.forEach(function (item) {
@@ -972,8 +1241,10 @@
                     });
                 }
 
-                function setActivateLayer(layerId) {
-                    cancelSelected();
+                function setActivateLayer(layerId, isNotCancelSelected) {
+                    if (!isNotCancelSelected) {
+                        cancelSelected();
+                    }
 
                     if (layerId === 1) {
                         pdoc.activateLayer = unitLayer;
@@ -997,6 +1268,9 @@
                     if (hit && !controlDrag) {
                         if (isText(hit.item)) {
                             $canvas['style'].cursor = 'text';
+                        }
+                        else if (controlRotate) {
+                            $canvas['style'].cursor = 'url(./images/rotate.cur), auto';
                         }
                         else if (hit.type === 'stroke') {
                             $canvas['style'].cursor = 'copy';
@@ -1056,7 +1330,7 @@
                     }
 
                     view.on('click', function (e) {
-                        var info = { x: e.point.x, y: e.point.y };
+                        var info = new paper.Point(e.point).divide(scale);
 
                         if (controlDrag || controlDraw) {
                             return;
@@ -1114,7 +1388,57 @@
                     var path;
                     var style;
                     var segment;
+                    var modify = false;
                     var selectItem;
+
+                    function setCurrentItem(item) {
+                        selectItem = item;
+                        selectShape(selectItem);
+                    }
+
+                    function removeSegment(hit) {
+                        setCurrentItem(hit.item);
+
+                        if (hit.type === 'segment') {
+                            hit.segment.remove();
+
+                            if (selectItem.segments.length < 3) {
+                                selectItem.parent.remove();
+                            }
+
+                            stack();
+                        };
+                    }
+
+                    function setPointPos(e, s) {
+                        if (e.event.shiftKey) {
+                            if (s.point.x === s.next.point.x) {
+                                s.point.x = s.previous.point.x;
+                                s.point.y = s.next.point.y;
+                            }
+                            else {
+                                s.point.x = s.next.point.x;
+                                s.point.y = s.previous.point.y;
+                            }
+                        }
+
+                        return s;
+                    }
+
+                    function handleHit(e, hit) {
+                        setCurrentItem(hit.item);
+
+                        if (hit.type === 'segment') {
+                            segment = setPointPos(e, hit.segment);
+                        }
+                        else if (hit.type === 'stroke') {
+                            segment = hit.item.insert(hit.location.index + 1, e.point.divide(scale));
+                            stack();
+                        }
+                        else if (hit.type === 'fill' && (e.event.ctrlKey || controlCopy)) {
+                            selectItem = copyShape(selectItem);
+                        }
+                    }
 
                     function createPath() {
                         style = currentStyle();
@@ -1130,6 +1454,7 @@
                         var hit;
 
                         textbox.hide();
+                        topBar.operation.hideMenus();
 
                         if (controlDrag || controlDraw) {
                             return;
@@ -1138,50 +1463,21 @@
                         segment = selectItem = null;
                         hit = pdoc.activateLayer.hitTest(e.point.divide(scale), hitOptions);
 
-                        if (e.event.button == 2) {
-                            if (hit) {
-                                selectItem = hit.item;
-                                selectShape(selectItem);
-
-                                if (hit.type === 'segment') {
-                                    hit.segment.remove();
-
-                                    if (selectItem.segments.length < 3) {
-                                        selectItem.parent.remove();
-                                    }
-                                };
-                            }
-
+                        if (hit && controlRotate) {
+                            setCurrentItem(hit.item);
                             return;
                         }
 
-                        if (e.event.button == 0) {
-                            if (hit) {
-                                selectItem = hit.item;
-                                selectShape(selectItem);
-
-                                if (hit.type === 'segment') {
-                                    segment = hit.segment;
-
-                                    if (e.event.shiftKey) {
-                                        if (segment.point.x === segment.next.point.x) {
-                                            segment.point.x = segment.previous.point.x;
-                                            segment.point.y = segment.next.point.y;
-                                        }
-                                        else {
-                                            segment.point.x = segment.next.point.x;
-                                            segment.point.y = segment.previous.point.y;
-                                        }
-                                    }
+                        switch (e.event.button) {
+                            case 2: hit && removeSegment(hit); break;
+                            case 0:
+                                if (hit) {
+                                    handleHit(e, hit);
                                 }
-                                else if (hit.type === 'stroke') {
-                                    segment = hit.item.insert(hit.location.index + 1, e.point.divide(scale));
+                                else if (!path && !controlDraw) {
+                                    path = createPath();
+                                    controlDraw = true;
                                 }
-                            }
-                            else if (!path && !controlDraw) {
-                                path = createPath();
-                                controlDraw = true;
-                            }
                         }
                     });
 
@@ -1191,13 +1487,22 @@
                         }
 
                         if (segment) {
+                            modify = true;
                             segment.point = e.point.divide(scale);
                         }
                         else if (selectItem) {
                             if (selectItem.className !== 'PointText') {
-                                selectItem.parent.translate(e.delta.divide(scale));
+                                if (controlRotate) {
+                                    modify = true;
+                                    selectItem.rotate((e.modifiers.shift ? -1 : 1) * Math.floor(e.delta.length));
+                                }
+                                else {
+                                    modify = true;
+                                    selectItem.parent.translate(e.delta.divide(scale));
+                                }
                             }
                             else {
+                                modify = true;
                                 selectItem.translate(e.delta.divide(scale));
                             }
                         }
@@ -1227,6 +1532,11 @@
                             return;
                         }
 
+                        if (modify) {
+                            modify = false;
+                            stack();
+                        }
+
                         if (path && controlDraw) {
                             if (e.event.button == 2) {
                                 if (path.segments.length > 1) {
@@ -1243,10 +1553,11 @@
                                     path.parent.addChild(
                                         new paper.PointText(assign({
                                             point: path.bounds.center,
-                                            content: '未命名' + (pdoc.activateLayer === unitLayer ? '单元' : '户型')
+                                            content: defaultName()
                                         }, textStyle))
                                     );
 
+                                    stack();
                                     selectShape(path);
                                 }
                                 else {
@@ -1273,6 +1584,8 @@
                             case KEY_CODE_DELETE: deleteShape(current); break;
                             case KEY_CODE_RETURN: canvas.editText(current); break;
                             case KEY_CODE_ESC:
+                                topBar.operation.hideMenus();
+
                                 if (controlDraw) {
                                     path.parent.remove();
                                     controlDraw = false;
@@ -1288,23 +1601,24 @@
                         var delta = new paper.Point(0, 0);
 
                         switch (e.event.keyCode) {
-                            case KEY_CODE_UP_ARROW: delta.y = -1; break;
-                            case KEY_CODE_BOTTOM_ARROW: delta.y = 1; break;
-                            case KEY_CODE_LEFT_ARROW: delta.x = -1; break;
-                            case KEY_CODE_RIGHT_ARROW: delta.x = 1; break;
-                            default: return;
+                            case KEY_CODE_UP_ARROW: delta.y = -1; moveShape(current, delta); break;
+                            case KEY_CODE_BOTTOM_ARROW: delta.y = 1; moveShape(current, delta); break;
+                            case KEY_CODE_LEFT_ARROW: delta.x = -1; moveShape(current, delta); break;
+                            case KEY_CODE_RIGHT_ARROW: delta.x = 1; moveShape(current, delta); break;
+                            case KEY_CODE_IE_CTRL_Z:
+                            case KEY_CODE_CTRL_Z: stacker.undo(); break;
+                            case KEY_CODE_IE_CTRL_Y:
+                            case KEY_CODE_CTRL_Y: stacker.redo(); break;
                         }
-
-                        moveShape(current, delta);
                     });
 
                     return tool;
                 }
 
                 function cancelSelected() {
-                    pdoc.layers.forEach(function (layer) {
-                        layer.selected = false;
-                    });
+                    pdoc.deselectAll();
+
+                    current = null;
                 }
 
                 function getTextStyle() {
@@ -1337,7 +1651,23 @@
                     return items;
                 }
 
+                function importJSON(json) {
+                    pdoc.clear();
+                    pdoc.importJSON(json);
+
+                    unitLayer = pdoc.layers[0];
+                    houseLayer = pdoc.layers[1];
+
+                    canvas.setActivateLayer(topBar.getSelectIndex(), !stacker.isHead());
+                }
+
+                function exportJSON() {
+                    return pdoc.exportJSON();
+                }
+
                 function importData(unitData, houseData) {
+                    createLayers();
+
                     unitLayer.addChildren(unitData);
                     houseLayer.addChildren(houseData);
 
@@ -1399,6 +1729,34 @@
                     }
                 }
 
+                function clearHouse() {
+                    houseLayer.clear();
+                    stack();
+                }
+
+                function clearUnit() {
+                    unitLayer.clear();
+                    stack();
+                }
+
+                function clearAll() {
+                    pdoc.layers.forEach(function (layer) {
+                        layer.clear();
+                    });
+
+                    stack();
+                }
+
+                function createLayers() {
+                    pdoc.clear();
+
+                    houseLayer = new paper.Layer(houseStyle);
+                    unitLayer = new paper.Layer(unitStyle);
+
+                    pdoc.addLayer(houseLayer);
+                    pdoc.addLayer(unitLayer);
+                }
+
                 function init() {
                     $canvas = qs('#view', $canvasWrapper);
 
@@ -1409,12 +1767,6 @@
 
                     pdoc.getOptions().handleSize = 8;
 
-                    houseLayer = new paper.Layer(houseStyle);
-                    unitLayer = new paper.Layer(unitStyle);
-
-                    pdoc.addLayer(houseLayer);
-                    pdoc.addLayer(unitLayer);
-
                     drawTool = createDrawTool();
                     defaultTool = new paper.Tool();
 
@@ -1423,19 +1775,24 @@
                             defaultTool.activate();
                         } else {
                             drawTool.activate();
+                            stacker = Revocable();
+
+                            stacker.onaction(function (current) {
+                                canvas.importJSON(current.data);
+                            });
+
+                            pdoc.view.on('doubleclick', function (e) {
+                                var hit;
+                                var text;
+
+                                if (controlDraw || controlDrag) {
+                                    return;
+                                }
+
+                                hit = pdoc.activateLayer.hitTest(e.point.divide(scale), hitOptions);
+                                hit && editText(hit.item);
+                            });
                         }
-
-                        pdoc.view.on('doubleclick', function (e) {
-                            var hit;
-                            var text;
-
-                            if (controlDraw || controlDrag || urlData.mode !== DESIGN_TIME || urlData.readonly) {
-                                return;
-                            }
-
-                            hit = pdoc.activateLayer.hitTest(e.point.divide(scale), hitOptions);
-                            hit && editText(hit.item);
-                        });
                     }
                     else {
                         hitTool = createHitTool();
@@ -1451,8 +1808,14 @@
                         editText: editText,
                         onhit: onhit,
                         exportData: exportData,
+                        exportJSON: exportJSON,
                         importData: importData,
-                        adjustShapeFont: adjustShapeFont
+                        importJSON: importJSON,
+                        adjustShapeFont: adjustShapeFont,
+                        defaultName: defaultName,
+                        clearHouse: clearHouse,
+                        clearUnit: clearUnit,
+                        clearAll: clearAll
                     };
                 }
 
@@ -1502,8 +1865,15 @@
 
                 if (urlData.mode === DESIGN_TIME && !urlData.readonly) {
                     textbox = TextBox();
-
                     op = topBar.operation;
+
+                    op.onundo(function () {
+                        stacker.undo();
+                    });
+
+                    op.onredo(function () {
+                        stacker.redo();
+                    });
 
                     op.onsave(function () {
                         executeSaveData();
@@ -1513,10 +1883,6 @@
                         if (current) {
                             deleteShape(current);
                         }
-                    });
-
-                    op.onfilter(function () {
-                        filterbox.show();
                     });
 
                     op.onedit(function () {
@@ -1530,9 +1896,35 @@
                         cursor(isMove ? 'catch' : undefined);
                     });
 
+                    op.onrotate(function (isRotate) {
+                        controlRotate = isRotate;
+
+                        if (current) {
+                            selectShape(current);
+                        }
+                    });
+
+                    op.oncopy(function (isCopy) {
+                        controlCopy = isCopy;
+                    });
+
+                    on(qs('.clear-house'), 'click', function () {
+                        canvas.clearHouse();
+                    });
+
+                    on(qs('.clear-unit'), 'click', function () {
+                        canvas.clearUnit();
+                    });
+
+                    on(qs('.clear-all'), 'click', function () {
+                        canvas.clearAll();
+                    });
+
                     topBar.onchange(function (drawArea) {
                         canvas.setActivateLayer(float(drawArea.getAttribute('data-id')));
                     });
+
+                    doRotate();
                 }
                 else {
                     addClass($main, 'readonly');
@@ -1616,18 +2008,18 @@
         function loadData() {
             loadCounter += 1;
 
-            if (urlData.mode === DESIGN_HITPOINT) {
-                loadDataSuccess(win.parent ? win.parent['planeData'] : { Types: [], Code: 0, Items: [] });
-            }
-            else {
-                ajax({
-                    url: '../data/sample.json',
-                    success: loadDataSuccess,
-                    fail: function () {
-                        loadDataFail();
-                    }
-                });
-            }
+            // if (urlData.mode === DESIGN_HITPOINT) {
+            //     loadDataSuccess(win.parent ? win.parent['planeData'] : { Types: [], Code: 0, Items: [] });
+            // }
+            // else {
+            ajax({
+                url: 'https://mwc.github.io/plane-designer/data/sample.json',
+                success: loadDataSuccess,
+                fail: function () {
+                    loadDataFail();
+                }
+            });
+            // }
         }
 
         function saveData(data, successCallback) {
@@ -1706,6 +2098,11 @@
         View().onload(function (view) {
             view.canvas.onhit(function (info) {
                 if (win.parent !== win && typeof win.parent['onpos'] === 'function') {
+                    assign(info, {
+                        x: Math.floor(info.x),
+                        y: Math.floor(info.y)
+                    });
+
                     win.parent['onpos'](info);
                 }
             });
