@@ -1757,6 +1757,10 @@
                     pdoc.addLayer(unitLayer);
                 }
 
+                function draw() {
+                    view.draw();
+                }
+
                 function init() {
                     $canvas = qs('#view', $canvasWrapper);
 
@@ -1799,8 +1803,6 @@
                         hitTool.activate();
                     }
 
-                    view.draw();
-
                     return {
                         setActivateLayer: setActivateLayer,
                         getActivateLayer: getActivateLayer,
@@ -1817,7 +1819,8 @@
                         defaultName: defaultName,
                         clearHouse: clearHouse,
                         clearUnit: clearUnit,
-                        clearAll: clearAll
+                        clearAll: clearAll,
+                        draw: draw
                     };
                 }
 
@@ -1835,7 +1838,10 @@
 
             function initCanvas() {
                 canvas = Canvas();
+
                 importData(dataSource.Items);
+                canvas.draw();
+
                 return canvas;
             }
 
