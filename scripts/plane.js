@@ -1799,6 +1799,8 @@
                         hitTool.activate();
                     }
 
+                    view.draw();
+
                     return {
                         setActivateLayer: setActivateLayer,
                         getActivateLayer: getActivateLayer,
