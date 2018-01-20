@@ -102,7 +102,7 @@
     /**
      * 手工触发指定事件
      * 
-     * @param {Node|Element} el      触发事件的元素
+     * @param {Node|Element|Window} el      触发事件的元素
      * @param {string}  type     指定事件类型，无需前缀 on
      */
     function trigger(el, type) {
@@ -394,6 +394,8 @@
         var KEY_CODE_IE_CTRL_Y = 25;
         var KEY_CODE_CTRL_Z = 90;
         var KEY_CODE_CTRL_Y = 89;
+        var KEY_CODE_PAGE_UP = 33;
+        var KEY_CODE_PAGE_DOWN = 34;
 
         var DESIGN_TIME = 0;
         var DESIGN_HITPOINT = 1;
@@ -771,6 +773,13 @@
                     'default';
             }
 
+            function rotateShape(shape, angle) {
+                if (shape) {
+                    shape.rotate(angle);
+                    stack();
+                }
+            }
+
             function moveShape(shape, delta) {
                 if (shape) {
                     shape.parent.position = shape.parent.position.add(delta);
@@ -821,6 +830,8 @@
                     current = shape;
                     shape.selected = true;
                 }
+
+                return shape;
             }
 
             function doDrag() {
@@ -898,7 +909,7 @@
 
             function doScale() {
                 function getScale(matrix) {
-                    return float(matrix.match(/^matrix\(([^,]+),/) [1]);
+                    return float(matrix.match(/^matrix\(([^,]+),/)[1]);
                 }
 
                 function handler(step) {
@@ -1388,12 +1399,11 @@
                     var path;
                     var style;
                     var segment;
-                    var modify = false;
                     var selectItem;
+                    var modify = false;
 
                     function setCurrentItem(item) {
-                        selectItem = item;
-                        selectShape(selectItem);
+                        return selectShape(selectItem = item);
                     }
 
                     function removeSegment(hit) {
@@ -1410,26 +1420,33 @@
                         };
                     }
 
-                    function setPointPos(e, s) {
+                    function setRightAnglePointPos(e, segment) {
                         if (e.event.shiftKey) {
-                            if (s.point.x === s.next.point.x) {
-                                s.point.x = s.previous.point.x;
-                                s.point.y = s.next.point.y;
+                            var prev = segment.previous.point;
+                            var next = segment.next.point;
+                            var point = segment.point;
+                            var raLeft = new paper.Point(prev.x, next.y);
+                            var raRight = new paper.Point(next.x, prev.y);
+
+                            if (point.equals(raLeft)) {
+                                point.set(raRight);
+                            }
+                            else if (point.equals(raRight)) {
+                                point.set(raLeft);
                             }
                             else {
-                                s.point.x = s.next.point.x;
-                                s.point.y = s.previous.point.y;
+                                point.set((point.subtract(raLeft).length < point.subtract(raRight).length) ? raLeft : raRight);
                             }
                         }
 
-                        return s;
+                        return segment;
                     }
 
                     function handleHit(e, hit) {
                         setCurrentItem(hit.item);
 
                         if (hit.type === 'segment') {
-                            segment = setPointPos(e, hit.segment);
+                            segment = setRightAnglePointPos(e, hit.segment);
                         }
                         else if (hit.type === 'stroke') {
                             segment = hit.item.insert(hit.location.index + 1, e.point.divide(scale));
@@ -1482,28 +1499,37 @@
                     });
 
                     tool.on('mousedrag', function (e) {
+                        var pos;
+                        var dp;
+                        var p;
+
                         if (controlDrag || controlDraw) {
                             return;
                         }
 
+                        p = e.point.divide(scale);
+                        dp = e.delta.divide(scale);
+
                         if (segment) {
                             modify = true;
-                            segment.point = e.point.divide(scale);
+                            segment.point = p;
                         }
                         else if (selectItem) {
                             if (selectItem.className !== 'PointText') {
                                 if (controlRotate) {
                                     modify = true;
-                                    selectItem.rotate((e.modifiers.shift ? -1 : 1) * Math.floor(e.delta.length));
+                                    pos = selectItem.position;
+
+                                    selectItem.rotate(dp.add(p).subtract(pos).angle - p.subtract(pos).angle);
                                 }
                                 else {
                                     modify = true;
-                                    selectItem.parent.translate(e.delta.divide(scale));
+                                    selectItem.parent.translate(dp);
                                 }
                             }
                             else {
                                 modify = true;
-                                selectItem.translate(e.delta.divide(scale));
+                                selectItem.translate(dp);
                             }
                         }
                     });
@@ -1609,6 +1635,8 @@
                             case KEY_CODE_CTRL_Z: stacker.undo(); break;
                             case KEY_CODE_IE_CTRL_Y:
                             case KEY_CODE_CTRL_Y: stacker.redo(); break;
+                            case KEY_CODE_PAGE_UP: rotateShape(current, -1); break;
+                            case KEY_CODE_PAGE_DOWN: rotateShape(current, 1); break;
                         }
                     });
 
@@ -1840,7 +1868,6 @@
                 canvas = Canvas();
 
                 importData(dataSource.Items);
-                canvas.draw();
 
                 return canvas;
             }
@@ -1942,7 +1969,8 @@
                     importData: importData,
                     loadImage: loadImage,
                     fixedPosition: fixedPosition,
-                    initCanvas: initCanvas
+                    initCanvas: initCanvas,
+                    draw: function () { canvas.draw(); }
                 };
             }
 
@@ -1956,6 +1984,7 @@
                 mainView.fixedPosition();
                 cv = mainView.initCanvas();
                 topBar && topBar.select(0);
+                mainView.draw();
 
                 loadCallbacks.forEach(function (callback) {
                     callback({
@@ -1977,7 +2006,7 @@
             var viewBox;
             var height;
 
-            var text = svg.substring(0, 1000).match(/<svg(.|\r|\n)*?>/i) [0];
+            var text = svg.substring(0, 1000).match(/<svg(.|\r|\n)*?>/i)[0];
             var width = text.match(/\bwidth\=(?:\'\")(.*?)(?:\'\")/i);
 
             if (width != null && (height = text.match(/\bheight\=(?:\'\")(.*?)(?:\'\")/i)) != null) {
@@ -1985,7 +2014,7 @@
             }
             else {
                 viewBox = text.match(/\bviewBox\=(?:\'|\")(.*?)(?:\'|\")/i);
-                return px(float(viewBox != null ? viewBox[1].split(/\,|\s/i) [2] : 0));
+                return px(float(viewBox != null ? viewBox[1].split(/\,|\s/i)[2] : 0));
             }
         }
 
@@ -2021,7 +2050,7 @@
             // }
             // else {
             ajax({
-                url: 'https://mwc.github.io/plane-designer/data/sample.json',
+                url: './data/sample.json',
                 success: loadDataSuccess,
                 fail: function () {
                     loadDataFail();
