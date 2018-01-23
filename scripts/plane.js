@@ -67,15 +67,6 @@
         }
     }
 
-    function handleTouchEvent(handler) {
-        var _ = this;
-        return function (e) {
-            if (e.targetTouches.length === 1) {
-                handler.call(this, e.targetTouches[0]);
-            }
-        };
-    }
-
     /**
      * 事件绑定
      * 
@@ -84,18 +75,8 @@
      * @param {EventListener} handler    事件处理回调
      */
     function on(el, type, handler) {
-        var eventMap = {
-            'mousedown': 'touchstart',
-            'mousemove': 'touchmove',
-            'mouseup': 'touchend'
-        };
-
         if (el) {
             el.addEventListener(type, handler, false);
-
-            if ('ontouchstart' in doc && (type in eventMap)) {
-                el.addEventListener(eventMap[type], handleTouchEvent(handler), false);
-            }
         }
     }
 
@@ -908,6 +889,11 @@
             }
 
             function doScale() {
+                var $scaleTool = qs('.scale-tool');
+                var $zoomIn = qs('.zoom-in', $scaleTool);
+                var $zoomOut = qs('.zoom-out', $scaleTool);
+                var $original = qs('.original', $scaleTool);
+
                 function getScale(matrix) {
                     return float(matrix.match(/^matrix\(([^,]+),/)[1]);
                 }
@@ -916,58 +902,35 @@
                     var cs = getComputedStyle($content);
 
                     scale = getScale(cs.transform) + step;
-                    scale = scale < 0.05 ? 0.05 : (scale > 50 ? 50 : scale);
+                    scale = scale < 0.05 ? 0.05 : (scale > 10 ? 10 : scale);
 
                     if (urlData.mode === DESIGN_TIME) {
                         canvas.adjustShapeFont();
                     }
 
-                    assign(contentStyle, {
-                        transform: 'scale(' + scale + ')'
-                    });
+                    assign(contentStyle, { transform: 'scale(' + scale + ')' });
                 }
 
                 function init() {
-                    var finger = null;
+                    if (urlData.mode === DESIGN_HITPOINT || urlData.readonly) {
+                        addClass(doc.body, 'hitting');
+                        assign($scaleTool['style'], { top: '20px' });
+                    }
 
-                    on(doc, 'mousewheel', function (e) {
-                        handler(e['wheelDelta'] > 0 ? 0.01 : -0.01);
+                    on($zoomIn, 'click', function () {
+                        handler(0.05);
+                        $original.textContent = Math.floor(scale * 100) + '%';
                     });
 
-                    if (urlData.touch) {
-                        on($main, 'touchstart', function (e) {
-                            var t = e['touches'];
+                    on($zoomOut, 'click', function () {
+                        handler(-0.05);
+                        $original.textContent = Math.floor(scale * 100) + '%';
+                    });
 
-                            if (t.length >= 2) {
-                                finger = Math.sqrt(
-                                    Math.pow(Math.abs(t[0].clientX - t[1].clientX), 2) +
-                                    Math.pow(Math.abs(t[0].clientY - t[1].clientY), 2)
-                                );
-                            }
-                            else {
-                                finger = null;
-                            }
-                        });
-
-                        on($main, 'touchmove', function (e) {
-                            var delta;
-                            var scaling;
-                            var t = e['touches'];
-
-                            if (finger !== null && t.length >= 2) {
-                                delta = Math.sqrt(
-                                    Math.pow(Math.abs(t[0].clientX - t[1].clientX), 2) +
-                                    Math.pow(Math.abs(t[0].clientY - t[1].clientY), 2)
-                                );
-
-                                handler((delta - finger) > 0 ? 0.005 : -0.005);
-                            }
-                        });
-
-                        on($main, 'touchend', function () {
-                            finger = null;
-                        });
-                    }
+                    on($original, 'click', function () {
+                        assign(contentStyle, { transform: 'scale(1)' });
+                        $original.textContent = '100%';
+                    });
                 }
 
                 return init();
@@ -1026,7 +989,10 @@
                 });
 
                 canvas.importData(unitData, houseData);
-                stack();
+
+                if (urlData.mode === DESIGN_TIME && !urlData.readonly) {
+                    stack();
+                }
             }
 
             function loadImage() {
@@ -1189,6 +1155,7 @@
             }
 
             function Canvas() {
+                var $container = qs('.container');
                 var paper = win['paper'];
                 var pdoc;
                 var view;
@@ -1308,13 +1275,24 @@
                     });
                 }
 
+                function createCheckTimer(timer, callback) {
+                    clearInterval(timer);
+
+                    return setInterval(callback, 400);
+                }
+
                 function createHitTool() {
+                    var $pointer = qs('#hit-point');
+
                     var tool = new paper.Tool();
-                    var hit;
                     var size = typeof urlData.size === 'number' ? urlData.size || 10 : 10;
                     var style = { strokeWidth: 2, fillColor: '#ff4d70', strokeColor: '#cc3e5a' };
-                    var pointer = qs('#hit-point');
-                    var pointerStyle = pointer['style'];
+                    var pointerStyle = $pointer['style'];
+                    var hit;
+                    var scrolling = false;
+                    var oldLeft;
+                    var oldTop;
+                    var timer;
 
                     assign(pointerStyle, {
                         backgroundColor: style.fillColor,
@@ -1340,10 +1318,23 @@
                         return tool;
                     }
 
+                    on(doc, 'scroll', function () {
+                        scrolling = true;
+                        oldLeft = $container.scrollLeft;
+                        oldTop = $container.scrollTop;
+
+                        timer = createCheckTimer(timer, function () {
+                            if ($container.scrollLeft === oldLeft && $container.scrollTop === oldTop) {
+                                scrolling = false;
+                                clearInterval(timer);
+                            }
+                        });
+                    });
+
                     view.on('click', function (e) {
                         var info = new paper.Point(e.point).divide(scale);
 
-                        if (controlDrag || controlDraw) {
+                        if (controlDrag || controlDraw || scrolling) {
                             return;
                         }
 
@@ -1894,10 +1885,6 @@
 
                 doScale();
 
-                if (!urlData.touch) {
-                    doDrag();
-                }
-
                 if (urlData.mode === DESIGN_TIME && !urlData.readonly) {
                     textbox = TextBox();
                     op = topBar.operation;
@@ -1959,6 +1946,7 @@
                         canvas.setActivateLayer(float(drawArea.getAttribute('data-id')));
                     });
 
+                    doDrag();
                     doRotate();
                 }
                 else {
