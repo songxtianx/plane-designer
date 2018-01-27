@@ -1330,7 +1330,12 @@
                             display: 'block'
                         });
 
-                        win.scrollTo(urlData.point[0] - float(win.innerWidth) / 2, urlData.point[1] - float(win.innerHeight) / 2);
+                        assign($main, {
+                            scrollLeft: urlData.point[0] - float(win.innerWidth) / 2,
+                            scrollTop: urlData.point[1] - float(win.innerHeight) / 2
+                        });
+
+                        //win.scrollTo(urlData.point[0] - float(win.innerWidth) / 2, urlData.point[1] - float(win.innerHeight) / 2);
                     }
 
                     if (urlData.readonly) {
