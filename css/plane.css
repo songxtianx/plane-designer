@@ -473,6 +473,7 @@ body {
     bottom: 0;
     z-index: 0;
     overflow: hidden;
+    -webkit-overflow-scrolling: auto;
 }
 
 .main-view-wrapper {
@@ -508,7 +509,7 @@ body {
 }
 
 .main-view.readonly {
-    position: static;
+    -webkit-overflow-scrolling: touch;
     overflow: auto;
 }
 
@@ -617,10 +618,11 @@ svg circle {
     background-color: #fff;
     box-shadow: 0 0 24px 0 rgba(0, 0, 0, 0.06), 0 1px 0 0 rgba(0, 0, 0, 0.02);
     box-sizing: border-box;
-    position: fixed;
+    position: absolute;
     padding: 0 5px;
     top: 90px;
     right: 20px;
+    margin: auto;
     z-index: 1;
     opacity: .95;
     color: #9f2085;

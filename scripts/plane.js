@@ -14,6 +14,8 @@
      * 
      * @param {string} selector     选择器
      * @param {Element} [context]   筛选上下文
+     * 
+     * @returns {HTMLElement}
      */
     function qs(selector, context) {
         try {
@@ -70,7 +72,7 @@
     /**
      * 事件绑定
      * 
-     * @param {Element|Document}  el     指定响应事件的元素
+     * @param {Element|Document|Window}  el     指定响应事件的元素
      * @param {string}   type            事件类型，无需前缀 on
      * @param {EventListener} handler    事件处理回调
      */
@@ -354,7 +356,7 @@
     }
 
     function lineHeight(height) {
-        return px(float(height) - float(fontSize(height)) / 2)
+        return px(float(height) - float(fontSize(height)) / 2);
     }
 
     function trim(str) {
@@ -552,8 +554,8 @@
                         on(item, 'click', function (e) {
                             var $li = this;
 
-                            if ($li['className'].match(/(^\s*selected|\s+selected(\s+|$))/) === null) {
-                                [].slice.call($li['parentElement'].querySelectorAll('li.selected')).forEach(function (n) {
+                            if ($li.className.match(/(^\s*selected|\s+selected(\s+|$))/) === null) {
+                                [].slice.call($li.parentElement.querySelectorAll('li.selected')).forEach(function (n) {
                                     removeClass(n, 'selected');
                                 });
 
@@ -614,12 +616,12 @@
                             removeClass(more, 'collapse');
                             addClass(more, 'expando');
 
-                            assign(more['style'], {
+                            assign(more.style, {
                                 right: px(float(more.getAttribute('data-right') || 10)),
                                 width: px(float(more.getAttribute('data-width') || 100))
                             });
 
-                            more['focus']();
+                            more.focus();
                         }
                         else {
                             callbacks[name].forEach(function (callback) {
@@ -659,7 +661,7 @@
                 }
 
                 function show() {
-                    $operation['style'].display = 'flex';
+                    $operation.style.display = 'flex';
                 }
 
                 function hideMenus() {
@@ -711,7 +713,7 @@
                 unitbar = Unitbar();
                 operation = Operation();
 
-                $topbar['style'].display = 'block';
+                $topbar.style.display = 'block';
 
                 return {
                     select: unitbar.select,
@@ -741,7 +743,7 @@
             var controlRotate = false;
 
             var current = null;
-            var contentStyle = $content['style'];
+            var contentStyle = $content.style;
             var scale = 1;
 
             var textbox;
@@ -749,7 +751,7 @@
             var stacker;
 
             function cursor(icon) {
-                $main['style'].cursor = (typeof icon === 'string') ?
+                $main.style.cursor = (typeof icon === 'string') ?
                     'url(./images/' + icon + '.png), url(./images/' + icon + '.cur), auto' :
                     'default';
             }
@@ -829,8 +831,8 @@
                     });
                 }
 
-                on(doc, 'keydown', function (e) {
-                    if (e['keyCode'] === KEY_CODE_SPACE) {
+                on(doc, 'keydown', /** @param e {KeyboardEvent} */ function (e) {
+                    if (e.keyCode === KEY_CODE_SPACE) {
                         controlDrag = true;
 
                         if (flag_catch) {
@@ -840,8 +842,8 @@
                     }
                 });
 
-                on(doc, 'keyup', function (e) {
-                    if (e['keyCode'] === KEY_CODE_SPACE) {
+                on(doc, 'keyup', /** @param e {KeyboardEvent} */  function (e) {
+                    if (e.keyCode === KEY_CODE_SPACE) {
                         dragging = false;
                         controlDrag = false;
 
@@ -852,20 +854,20 @@
                     }
                 });
 
-                on($content, 'mousedown', function (e) {
-                    if (e['button'] === 0 && controlDrag) {
+                on($content, 'mousedown', /** @param e {MouseEvent} */ function (e) {
+                    if (e.button === 0 && controlDrag) {
                         cursor('grab');
 
                         left = float(getComputedStyle($content).left);
                         top = float(getComputedStyle($content).top);
 
-                        point = { x: e['clientX'], y: e['clientY'] };
+                        point = { x: e.clientX, y: e.clientY };
                         dragging = true;
                     }
                 });
 
-                on(doc, 'mousemove', function (e) {
-                    dragging && dragmove({ x: e['clientX'] - point.x, y: e['clientY'] - point.y });
+                on(doc, 'mousemove', /** @param e {MouseEvent} */ function (e) {
+                    dragging && dragmove({ x: e.clientX - point.x, y: e.clientY - point.y });
                 });
 
                 on($content, 'mouseover', function () {
@@ -912,24 +914,39 @@
                 }
 
                 function init() {
+                    var style = $scaleTool.style;
+                    var computedStyle;
+                    var right;
+                    var top;
+
                     if (urlData.mode === DESIGN_HITPOINT || urlData.readonly) {
                         addClass(doc.body, 'hitting');
-                        assign($scaleTool['style'], { top: '20px' });
+                        assign(style, { top: '20px' });
                     }
+
+                    computedStyle = getComputedStyle($scaleTool);
+
+                    right = float(computedStyle.right);
+                    top = float(computedStyle.top);
 
                     on($zoomIn, 'click', function () {
                         handler(0.05);
-                        $original.textContent = Math.floor(scale * 100) + '%';
+                        $original.textContent = Math.round(scale * 100) + '%';
                     });
 
                     on($zoomOut, 'click', function () {
                         handler(-0.05);
-                        $original.textContent = Math.floor(scale * 100) + '%';
+                        $original.textContent = Math.round(scale * 100) + '%';
                     });
 
                     on($original, 'click', function () {
                         assign(contentStyle, { transform: 'scale(1)' });
                         $original.textContent = '100%';
+                    });
+
+                    on(doc, 'scroll', function () {
+                        style.right = px(right - win.scrollX);
+                        style.top = px(win.scrollY + top);
                     });
                 }
 
@@ -1001,7 +1018,7 @@
                 on($img, 'load', function () {
                     if (/\.svg$/i.test(urlData.src)) {
                         getSVGSize(urlData.src, function (size) {
-                            $img['style'].width = size;
+                            $img.style.width = size;
 
                             loadCounter -= 1;
                             fireLoad();
@@ -1037,7 +1054,7 @@
             function TextBox() {
                 var $textbox = qs('.name-box', $content);
 
-                var textStyle = $textbox['style'];
+                var textStyle = $textbox.style;
                 var currentText = null;
                 var targetStyle;
                 var bounds;
@@ -1067,7 +1084,7 @@
                         $textbox['value'] = oldText = shape.content;
 
                         $textbox['select']();
-                        $textbox['focus']();
+                        $textbox.focus();
                     }
                 }
 
@@ -1118,8 +1135,8 @@
                         e.stopPropagation();
                     });
 
-                    on($textbox, 'keyup', function (e) {
-                        switch (e['keyCode']) {
+                    on($textbox, 'keyup', /** @param e {KeyboardEvent} */ function (e) {
+                        switch (e.keyCode) {
                             case KEY_CODE_RETURN:
                                 trigger($textbox, 'blur');
                                 ignore(e);
@@ -1243,25 +1260,27 @@
                 }
 
                 function canvasCursor(hit) {
+                    var style = $canvas.style;
+
                     if (hit && !controlDrag) {
                         if (isText(hit.item)) {
-                            $canvas['style'].cursor = 'text';
+                            style.cursor = 'text';
                         }
                         else if (controlRotate) {
-                            $canvas['style'].cursor = 'url(./images/rotate.cur), auto';
+                            style.cursor = 'url(./images/rotate.cur), auto';
                         }
                         else if (hit.type === 'stroke') {
-                            $canvas['style'].cursor = 'copy';
+                            style.cursor = 'copy';
                         }
                         else if (hit.type === 'fill') {
-                            $canvas['style'].cursor = 'move';
+                            style.cursor = 'move';
                         }
                         else {
-                            $canvas['style'].cursor = 'default';
+                            style.cursor = 'default';
                         }
                     }
                     else {
-                        $canvas['style'] = '';
+                        $canvas.style = '';
                     }
                 }
 
@@ -1278,7 +1297,7 @@
                 function createCheckTimer(timer, callback) {
                     clearInterval(timer);
 
-                    return setInterval(callback, 400);
+                    return setInterval(callback, 500);
                 }
 
                 function createHitTool() {
@@ -1287,7 +1306,7 @@
                     var tool = new paper.Tool();
                     var size = typeof urlData.size === 'number' ? urlData.size || 10 : 10;
                     var style = { strokeWidth: 2, fillColor: '#ff4d70', strokeColor: '#cc3e5a' };
-                    var pointerStyle = $pointer['style'];
+                    var pointerStyle = $pointer.style;
                     var hit;
                     var scrolling = false;
                     var oldLeft;
@@ -1318,7 +1337,7 @@
                         return tool;
                     }
 
-                    on(doc, 'scroll', function () {
+                    on(win, 'scroll', function () {
                         scrolling = true;
                         oldLeft = $container.scrollLeft;
                         oldTop = $container.scrollTop;
@@ -1848,7 +1867,7 @@
 
             function fixedPosition() {
                 if (urlData.mode === DESIGN_TIME && !urlData.readonly && !urlData.point) {
-                    assign($content['style'], {
+                    assign($content.style, {
                         left: '30px',
                         top: '80px'
                     });
@@ -2124,8 +2143,8 @@
             view.canvas.onhit(function (info) {
                 if (win.parent !== win && typeof win.parent['onpos'] === 'function') {
                     assign(info, {
-                        x: Math.floor(info.x),
-                        y: Math.floor(info.y)
+                        x: Math.round(info.x),
+                        y: Math.round(info.y)
                     });
 
                     win.parent['onpos'](info);
