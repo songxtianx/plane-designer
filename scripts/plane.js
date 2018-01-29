@@ -910,6 +910,10 @@
                         canvas.adjustShapeFont();
                     }
 
+                    if (urlData.mode === DESIGN_HITPOINT) {
+                        canvas.rerenderPoint();
+                    }
+
                     assign(contentStyle, { transform: 'scale(' + scale + ')' });
                 }
 
@@ -1173,7 +1177,10 @@
 
             function Canvas() {
                 var $container = qs('.container');
+                var $pointer = qs('#hit-point');
+
                 var paper = win['paper'];
+                var pointerStyle = $pointer.style;
                 var pdoc;
                 var view;
 
@@ -1205,6 +1212,9 @@
                     fill: true,
                     tolerance: 5
                 };
+
+                var size = typeof urlData.size === 'number' ? urlData.size || 10 : 10;
+                var style = { strokeWidth: 2, fillColor: '#ff4d70', strokeColor: '#cc3e5a' };
 
                 var hitCallbacks = [];
 
@@ -1300,13 +1310,12 @@
                     return setInterval(callback, 500);
                 }
 
-                function createHitTool() {
-                    var $pointer = qs('#hit-point');
+                function rerenderPoint() {
+                    pointerStyle.transform = 'scale(' + (1 / scale) + ')';
+                }
 
+                function createHitTool() {
                     var tool = new paper.Tool();
-                    var size = typeof urlData.size === 'number' ? urlData.size || 10 : 10;
-                    var style = { strokeWidth: 2, fillColor: '#ff4d70', strokeColor: '#cc3e5a' };
-                    var pointerStyle = $pointer.style;
                     var hit;
                     var scrolling = false;
                     var oldLeft;
@@ -1849,20 +1858,21 @@
                     return {
                         setActivateLayer: setActivateLayer,
                         getActivateLayer: getActivateLayer,
+                        adjustShapeFont: adjustShapeFont,
                         cancelSelected: cancelSelected,
-                        isText: isText,
+                        rerenderPoint: rerenderPoint,
                         getTextStyle: getTextStyle,
-                        editText: editText,
-                        onhit: onhit,
+                        defaultName: defaultName,
                         exportData: exportData,
                         exportJSON: exportJSON,
                         importData: importData,
                         importJSON: importJSON,
-                        adjustShapeFont: adjustShapeFont,
-                        defaultName: defaultName,
                         clearHouse: clearHouse,
                         clearUnit: clearUnit,
                         clearAll: clearAll,
+                        editText: editText,
+                        isText: isText,
+                        onhit: onhit,
                         draw: draw
                     };
                 }
