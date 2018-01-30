@@ -909,8 +909,7 @@
                     if (urlData.mode === DESIGN_TIME) {
                         canvas.adjustShapeFont();
                     }
-
-                    if (urlData.mode === DESIGN_HITPOINT) {
+                    else {
                         canvas.rerenderPoint();
                     }
 
