@@ -1313,6 +1313,16 @@
                     pointerStyle.transform = 'scale(' + (1 / scale) + ')';
                 }
 
+                function movePoint(e, info) {
+                    assign(pointerStyle, {
+                        left: px(e.point.x / scale - size - 1),
+                        top: px(e.point.y / scale - size - 1),
+                        display: 'block'
+                    });
+
+                    fireHit(info);
+                }
+
                 function createHitTool() {
                     var tool = new paper.Tool();
                     var hit;
@@ -1370,12 +1380,6 @@
                             return;
                         }
 
-                        assign(pointerStyle, {
-                            left: px(e.point.x / scale - size - 1),
-                            top: px(e.point.y / scale - size - 1),
-                            display: 'block'
-                        });
-
                         hit = pdoc.hitTest(e.point.divide(scale), hitOptions);
 
                         if (hit) {
@@ -1384,6 +1388,10 @@
                                 name: isText(hit.item) ? hit.item.content : hit.item.nextSibling.content,
                                 type: (hit.item.parent.parent === unitLayer) ? 1 : 0
                             });
+
+                            if (urlData.scope) {
+                                movePoint(e, info);
+                            }
                         }
                         else {
                             assign(info, {
@@ -1393,7 +1401,9 @@
                             });
                         }
 
-                        fireHit(info);
+                        if (!urlData.scope) {
+                            movePoint(e, info);
+                        }
                     });
 
                     return tool;
@@ -1767,15 +1777,58 @@
                     else {
                         pdoc.layers.forEach(function (layer) {
                             layer.children.forEach(function (item) {
-                                if (item.className === 'Group') {
-                                    var p = item.firstChild;
-                                    item.selected = false;
-                                    item.lastChild.visible = false;
+                                var path;
 
-                                    if (p.fillColor) { p.fillColor.alpha = 0.01; }
-                                    if (p.strokeColor) { p.strokeColor.alpha = 0.01; }
+                                if (item.className === 'Group') {
+                                    if (urlData.scope && item.data !== urlData.scope) {
+                                        item.visible = false;
+                                    }
+                                    else {
+                                        path = item.firstChild;
+                                        item.selected = false;
+                                        item.lastChild.visible = false;
+
+                                        if (path.strokeColor) {
+                                            path.strokeColor.alpha = urlData.scope ? 1 : 0.01;
+                                        }
+
+                                        if (urlData.scope) {
+                                            path.strokeWidth = 4;
+                                        }
+
+                                        if (path.fillColor) {
+                                            path.fillColor.alpha = 0.01;
+                                        }
+
+                                        positionShape(item);
+                                    }
                                 }
                             });
+                        });
+                    }
+                }
+
+                function positionShape(item) {
+                    var center;
+                    var mainStyle;
+                    var timer;
+                    var width;
+                    var mainStyle;
+
+                    if (item) {
+                        center = item.position;
+                        mainStyle = getComputedStyle($main);
+                        width = float(mainStyle.width);
+
+                        timer = setInterval(function () {
+                            if ($main.scrollWidth - width > 2) {
+                                assign($main, {
+                                    scrollLeft: center.x - width / 2,
+                                    scrollTop: center.y - float(mainStyle.height) / 2
+                                });
+
+                                clearInterval(timer);
+                            }
                         });
                     }
                 }
@@ -2096,6 +2149,10 @@
                 u.mode = DESIGN_TIME;
             }
 
+            if (urlData.scope) {
+                urlData.scope = trim(urlData.scope);
+            }
+
             if ('point' in u) {
                 if (typeof u.point === 'string' && u.point.length > 0) {
                     u.point = u.point.split(',');
@@ -2155,6 +2212,7 @@
 
         View().onload(function (view) {
             view.canvas.onhit(function (info) {
+                console.log(info);
                 if (win.parent !== win && typeof win.parent['onpos'] === 'function') {
                     assign(info, {
                         x: Math.round(info.x),
