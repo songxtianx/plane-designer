@@ -1184,15 +1184,15 @@
                 var view;
 
                 var unitStyle = {
-                    strokeColor: 'rgb(204, 62, 90, 0.9)',
+                    strokeColor: '#cc3e5ae6',
                     strokeWidth: 2,
-                    fillColor: 'rgb(255, 77, 112, 0.4)'
+                    fillColor: '#ff4d7066'
                 };
 
                 var houseStyle = {
-                    strokeColor: 'rgb(0, 122, 204, 0.8)',
+                    strokeColor: '#007acccc',
                     strokeWidth: 2,
-                    fillColor: 'rgb(0, 152, 255, 0.3)'
+                    fillColor: '#0098ff4d'
                 };
 
                 var textStyle = {
@@ -1735,13 +1735,13 @@
                     houseLayer.bringToFront();
 
                     var unitStyle = {
-                        strokeColor: 'rgb(204, 62, 90, 0.9)',
-                        fillColor: 'rgb(255, 77, 112, 0.4)'
+                        strokeColor: '#cc3e5ae6',
+                        fillColor: '#ff4d7066'
                     };
 
                     var houseStyle = {
-                        strokeColor: 'rgb(0, 122, 204, 0.8)',
-                        fillColor: 'rgb(0, 152, 255, 0.3)'
+                        strokeColor: '#007acccc',
+                        fillColor: '#0098ff4d'
                     };
 
                     var textStyle = {
@@ -2212,7 +2212,6 @@
 
         View().onload(function (view) {
             view.canvas.onhit(function (info) {
-                console.log(info);
                 if (win.parent !== win && typeof win.parent['onpos'] === 'function') {
                     assign(info, {
                         x: Math.round(info.x),
