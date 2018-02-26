@@ -1044,7 +1044,7 @@
                 var data = extend({}, dataSource, true);
 
                 data.Items = canvas.exportData();
-
+                console.log(data);
                 return data;
             }
 
@@ -1491,13 +1491,19 @@
                     }
 
                     function createPath() {
-                        style = currentStyle();
+                        var p;
 
-                        return new paper.Group().addChild(new paper.Path({
+                        style = currentStyle();
+                        p = new paper.Path({
                             strokeWidth: style.strokeWidth,
                             strokeColor: style.strokeColor,
                             selectedColor: style.strokeColor
-                        }));
+                        });
+
+                        p.strokeColor.alpha = 0.9;
+                        p.selectedColor.alpha = 0.9;
+
+                        return new paper.Group().addChild(p);
                     }
 
                     tool.on('mousedown', function (e) {
@@ -1603,6 +1609,7 @@
                                 }
 
                                 path.fillColor = style.fillColor;
+                                path.fillColor.alpha = 0.4;
                                 path.closed = true;
                                 current = path;
 
@@ -1701,7 +1708,7 @@
                     pdoc.layers.forEach(function (layer, type) {
                         layer.children.forEach(function (item) {
                             items.push({
-                                id: randomString(),
+                                id: typeof item.data === 'string' ? item.data : randomString(),
                                 type: type === 0 ? 1 : 0,
                                 name: item.lastChild.content,
                                 info: JSON.stringify(item)
@@ -1733,21 +1740,6 @@
                     houseLayer.addChildren(houseData);
 
                     houseLayer.bringToFront();
-
-                    var unitStyle = {
-                        strokeColor: '#cc3e5ae6',
-                        fillColor: '#ff4d7066'
-                    };
-
-                    var houseStyle = {
-                        strokeColor: '#007acccc',
-                        fillColor: '#0098ff4d'
-                    };
-
-                    var textStyle = {
-                        fillColor: 'white',
-                        shadowColor: 'black',
-                    };
 
                     if (urlData.mode === DESIGN_TIME) {
                         unitLayer.children.forEach(function (item) {
